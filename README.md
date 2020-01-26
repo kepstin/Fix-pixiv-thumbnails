@@ -4,7 +4,8 @@ Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnail
 
 I understand English and simple Japanese, please help translate :)
 
-[Github](https://github.com/kepstin/Fix-pixiv-thumbnails) [Old Changelog](https://greasyfork.org/en/forum/discussion/63662/changelog/p1)
+* [Github](https://github.com/kepstin/Fix-pixiv-thumbnails)
+* [Changelog](https://github.com/kepstin/Fix-pixiv-thumbnails/releases)
 
 ## Example
 
