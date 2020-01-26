@@ -3,7 +3,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20191120.0
+// @version        20191224.0
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
 // @author         Calvin Walton
@@ -83,6 +83,24 @@
         }
     }
 
+    // We're using some uncommon thumbnail dimensions, and pixiv might not have them pre-cached. The thumbnail
+    // request sometimes errors out (404) on thumbnails that are slow to generate, so retry them until they
+    // load
+    function imgErrorHandler(event) {
+        let self = this;
+        if ((self.dataset.kepstinRetry|0) > 6) {
+            console.log("gave up loading", self.src);
+            return;
+        }
+        self.dataset.kepstinRetry = (self.dataset.kepstinRetry|0) + 1;
+        let sleep = Math.min((self.dataset.kepstinRetry|0) * 2 + 1, 10);
+        console.log("error loading", self.src, "try", self.dataset.kepstinRetry, "sleep", sleep);
+        window.setTimeout(function() { console.log("reloading", self.src); self.src = self.src; }, sleep * 1000);
+        event.stopImmediatePropagation();
+        event.stopPropagation();
+        return false;
+    }
+
     function handleImg(node) {
         if (node.dataset.kepstinThumbnail) { return; }
 
@@ -95,6 +113,7 @@
         imgSrcset(node, size, m[3]);
         node.style.objectFit = 'contain';
 
+        node.addEventListener('error', imgErrorHandler);
         node.dataset.kepstinThumbnail = 'ok';
     }
 
@@ -117,6 +136,7 @@
         node.height = node.style.height = m[2];
         node.style.objectFit = 'contain';
 
+        node.addEventListener('error', imgErrorHandler);
         node.dataset.kepstinThumbnail = 'ok';
     }
 
@@ -140,6 +160,8 @@
         img.style.width = node.style.width;
         img.style.height = node.style.height;
         img.style.objectFit = 'contain';
+
+        img.addEventListener('error', imgErrorHandler);
         img.dataset.kepstinThumbnail = 'ok';
 
         node.replaceWith(img);
@@ -160,6 +182,8 @@
         img.style.height = '100%';
         img.style.objectFit = 'contain';
         img.style.position = 'absolute';
+
+        img.addEventListener('error', imgErrorHandler);
         img.dataset.kepstinThumbnail = 'ok';
 
         node.style.backgroundImage = '';
