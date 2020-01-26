@@ -3,7 +3,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20190913.3
+// @version        20190913.4
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
 // @author         Calvin Walton
@@ -38,6 +38,11 @@
 
     // Create a srcset= attribute on the img, with appropriate dpi scaling values
     function imgSrcset(img, size, url_stuff) {
+        img.srcset = `${src_prefix}/c/150x150/img-master/${url_stuff}${thumb_suffix} ${150 / size}x,
+                      ${src_prefix}/c/240x240/img-master/${url_stuff}${thumb_suffix} ${240 / size}x,
+                      ${src_prefix}/c/360x360_70/img-master/${url_stuff}${thumb_suffix} ${360 / size}x,
+                      ${src_prefix}/c/600x600/img-master/${url_stuff}${thumb_suffix} ${600 / size}x,
+                      ${src_prefix}/img-master/${url_stuff}${thumb_suffix} ${1200 / size}x`;
         if (150 / size >= window.devicePixelRatio) {
             img.src = `${src_prefix}/c/150x150/img-master/${url_stuff}${thumb_suffix}`;
         } else if (240 / size >= window.devicePixelRatio) {
@@ -49,11 +54,6 @@
         } else { /* 1200 */
             img.src = `${src_prefix}/img-master/${url_stuff}${thumb_suffix}`;
         }
-        img.srcset = `${src_prefix}/c/150x150/img-master/${url_stuff}${thumb_suffix} ${150 / size}x,
-                      ${src_prefix}/c/240x240/img-master/${url_stuff}${thumb_suffix} ${240 / size}x,
-                      ${src_prefix}/c/360x360_70/img-master/${url_stuff}${thumb_suffix} ${360 / size}x,
-                      ${src_prefix}/c/600x600/img-master/${url_stuff}${thumb_suffix} ${600 / size}x,
-                      ${src_prefix}/img-master/${url_stuff}${thumb_suffix} ${1200 / size}x`;
     }
 
     function findParentSize(node) {
