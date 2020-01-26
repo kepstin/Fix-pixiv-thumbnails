@@ -3,7 +3,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20190913.1
+// @version        20190913.2
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
 // @author         Calvin Walton
@@ -131,6 +131,15 @@
         node.dataset.kepstinThumbnail = 'ok';
     }
 
+    function handleDivBackground(node) {
+        if (node.classList.contains('js-lazyload') || node.classList.contains('lazyloaded') || node.classList.contains('lazyloading')) { return; }
+        if (node.dataset.kepstinThumbnail) { return; }
+
+        if (cssBackgroundImage(node)) {
+            node.dataset.kepstinThumbnail = 'ok';
+        }
+    }
+
     function onetimeThumbnails(parentNode) {
         for (let node of parentNode.querySelectorAll('img')) {
             if (node.parentElement.classList.contains('_layout-thumbnail')) {
@@ -139,14 +148,8 @@
                 handleImg(node);
             }
         }
-    }
-
-    function handleDiscoveryDiv(node) {
-        if (node.classList.contains('js-lazyload') || node.classList.contains('lazyloaded') || node.classList.contains('lazyloading')) { return; }
-        if (node.dataset.kepstinThumbnail) { return; }
-
-        if (cssBackgroundImage(node)) {
-            node.dataset.kepstinThumbnail = 'ok';
+        for (let node of parentNode.querySelectorAll('div[style*=background-image]')) {
+            handleDivBackground(node);
         }
     }
 
@@ -158,8 +161,8 @@
                         if (node.nodeName == 'IMG') {
                             handleImg(node);
                         } else if (node.nodeName == 'DIV') {
-                            if (node.parentElement && node.parentElement.classList.contains('gtm-illust-recommend-thumbnail-link')) {
-                                handleDiscoveryDiv(node);
+                            if (node.style.backgroundImage) {
+                                handleDivBackground(node);
                             } else {
                                 onetimeThumbnails(node);
                             }
@@ -168,8 +171,8 @@
                     break;
                 case 'attributes':
                     if (mutation.target.nodeName == 'DIV') {
-                        if (mutation.target.parentElement.classList.contains('gtm-illust-recommend-thumbnail-link')) {
-                            handleDiscoveryDiv(mutation.target);
+                        if (mutation.target.style.backgroundImage) {
+                            handleDivBackground(mutation.target);
                         }
                     } else if (mutation.target.nodeName == 'IMG') {
                         if (mutation.target.parentElement.classList.contains('_layout-thumbnail')) {
