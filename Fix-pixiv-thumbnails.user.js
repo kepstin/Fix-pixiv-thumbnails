@@ -3,7 +3,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20191224.0
+// @version        20200116.0
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
 // @author         Calvin Walton
@@ -17,6 +17,7 @@
 // @match          https://www.pixiv.net/en/
 // @match          https://www.pixiv.net/en/artworks/*
 // @match          https://www.pixiv.net/en/tags/*
+// @match          https://www.pixiv.net/en/users/*
 // @match          https://www.pixiv.net/history.php*
 // @match          https://www.pixiv.net/howto*
 // @match          https://www.pixiv.net/member.php*
@@ -27,6 +28,7 @@
 // @match          https://www.pixiv.net/search.php*
 // @match          https://www.pixiv.net/stacc*
 // @match          https://www.pixiv.net/tags/*
+// @match          https://www.pixiv.net/users/*
 // @grant          none
 // ==/UserScript==
 
