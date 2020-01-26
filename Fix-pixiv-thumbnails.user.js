@@ -193,17 +193,17 @@
     }
 
     function onetimeThumbnails(parentNode) {
-        for (let node of parentNode.querySelectorAll('img')) {
+        for (let node of parentNode.querySelectorAll('IMG')) {
             if (node.parentElement.classList.contains('_layout-thumbnail')) {
                 handleLayoutThumbnail(node);
             } else {
                 handleImg(node);
             }
         }
-        for (let node of parentNode.querySelectorAll('div[style*=background-image]')) {
+        for (let node of parentNode.querySelectorAll('DIV[style*=background-image]')) {
             handleDivBackground(node);
         }
-        for (let node of parentNode.querySelectorAll('a[style*=background-image]')) {
+        for (let node of parentNode.querySelectorAll('A[style*=background-image]')) {
             handleABackground(node);
         }
     }
@@ -225,7 +225,7 @@
                             if (node.style.backgroundImage) {
                                 handleABackground(node);
                             }
-                        } else if (node.nodeName == 'SECTION' || node.nodeName == 'LI') {
+                        } else if (node.nodeName == 'SECTION' || node.nodeName == 'LI' || node.nodeName == 'FIGURE') {
                             onetimeThumbnails(node);
                         }
                     }
