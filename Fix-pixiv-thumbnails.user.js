@@ -3,7 +3,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20190913.4
+// @version        20190913.5
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
 // @author         Calvin Walton
@@ -12,6 +12,8 @@
 // @match          https://www.pixiv.net/bookmark_add.php*
 // @match          https://www.pixiv.net/bookmark_new_illust.php*
 // @match          https://www.pixiv.net/discovery
+// @match          https://www.pixiv.net/discovery/users
+// @match          https://www.pixiv.net/howto*
 // @match          https://www.pixiv.net/member.php*
 // @match          https://www.pixiv.net/member_illust.php*
 // @match          https://www.pixiv.net/new_illust.php*
@@ -93,7 +95,10 @@
     function handleLayoutThumbnail(node) {
         if (node.dataset.kepstinThumbnail) { return; }
 
-        if (/transparent.gif$/.test(node.src)) { return; }
+        // Check for lazy-loaded images, which have a temporary URL
+        // They'll be updated later when the src is set
+        if (node.src.startsWith('data:') || node.src.endsWith('transparent.gif')) { return; }
+
         if (!node.src.startsWith(src_prefix)) { node.dataset.kepstinThumbnail = 'skip'; return; }
 
         let m = node.src.match(src_regexp);
@@ -112,6 +117,8 @@
     function handleDivBackground(node) {
         if (node.dataset.kepstinThumbnail) { return; }
 
+        // Check for lazy-loaded images
+        // They'll be updated later when the background image (in style attribute) is set
         if (node.classList.contains('js-lazyload') || node.classList.contains('lazyloaded') || node.classList.contains('lazyloading')) { return; }
 
         if (node.style.backgroundImage.indexOf(src_prefix) == -1) { node.dataset.kepstinThumbnail = 'skip'; return; }
@@ -124,12 +131,33 @@
         imgSrcset(img, size, m[3]);
         img.class = node.class;
         img.alt = node.getAttribute('alt');
-        img.style.width = `${size}px`;
-        img.style.height = `${size}px`;
+        img.style.width = node.style.width;
+        img.style.height = node.style.height;
         img.style.objectFit = 'contain';
         img.dataset.kepstinThumbnail = 'ok';
 
         node.replaceWith(img);
+    }
+
+    function handleABackground(node) {
+        if (node.dataset.kepstinThumbnail) { return; }
+
+        if (node.style.backgroundImage.indexOf(src_prefix) == -1) { node.dataset.kepstinThumbnail = 'skip'; return; }
+        let m = node.style.backgroundImage.match(src_regexp);
+        if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
+        let size = Math.max(node.clientWidth, node.clientHeight);
+
+        let img = document.createElement('IMG');
+        imgSrcset(img, size, m[3]);
+        img.alt = '';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'contain';
+        img.style.position = 'absolute';
+        img.dataset.kepstinThumbnail = 'ok';
+
+        node.style.backgroundImage = '';
+        node.prepend(img);
     }
 
     function onetimeThumbnails(parentNode) {
@@ -142,6 +170,9 @@
         }
         for (let node of parentNode.querySelectorAll('div[style*=background-image]')) {
             handleDivBackground(node);
+        }
+        for (let node of parentNode.querySelectorAll('a[style*=background-image]')) {
+            handleABackground(node);
         }
     }
 
@@ -158,6 +189,12 @@
                             } else {
                                 onetimeThumbnails(node);
                             }
+                        } else if (node.nodeName == 'A') {
+                            if (node.style.backgroundImage) {
+                                handleABackground(node);
+                            }
+                        } else if (node.nodeName == 'SECTION' || node.nodeName == 'LI') {
+                            onetimeThumbnails(node);
                         }
                     }
                     break;
