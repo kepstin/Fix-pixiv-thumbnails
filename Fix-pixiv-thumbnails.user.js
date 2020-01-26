@@ -46,24 +46,57 @@
     // $3: everything in the URL after the thumbnail size up to the image suffix
     let src_regexp = /https?:\/\/i\.pximg\.net(?:\/c\/(\d+)x(\d+)(?:_[^\/]*)?)?\/(?:custom-thumb|img-master)\/(.*)_(?:custom|master|square)1200.jpg/;
 
-    // Create a srcset= attribute on the img, with appropriate dpi scaling values
-    function imgSrcset(img, size, url_stuff) {
-        img.srcset = `${src_prefix}/c/150x150/img-master/${url_stuff}${thumb_suffix} ${150 / size}x,
-                      ${src_prefix}/c/240x240/img-master/${url_stuff}${thumb_suffix} ${240 / size}x,
-                      ${src_prefix}/c/360x360_70/img-master/${url_stuff}${thumb_suffix} ${360 / size}x,
-                      ${src_prefix}/c/600x600/img-master/${url_stuff}${thumb_suffix} ${600 / size}x,
-                      ${src_prefix}/img-master/${url_stuff}${thumb_suffix} ${1200 / size}x`;
-        if (150 / size >= window.devicePixelRatio) {
-            img.src = `${src_prefix}/c/150x150/img-master/${url_stuff}${thumb_suffix}`;
-        } else if (240 / size >= window.devicePixelRatio) {
-            img.src = `${src_prefix}/c/240x240/img-master/${url_stuff}${thumb_suffix}`;
-        } else if (360 / size >= window.devicePixelRatio) {
-            img.src = `${src_prefix}/c/360x360_70/img-master/${url_stuff}${thumb_suffix}`;
-        } else if (600 / size >= window.devicePixelRatio) {
-            img.src = `${src_prefix}/c/600x600/img-master/${url_stuff}${thumb_suffix}`;
-        } else { /* 1200 */
-            img.src = `${src_prefix}/img-master/${url_stuff}${thumb_suffix}`;
+    const image_sizes = [
+        { size: 150, path: '/c/150x150' },
+        { size: 240, path: '/c/240x240' },
+        { size: 360, path: '/c/360x360_70' },
+        { size: 600, path: '/c/600x600' },
+        { size: 1200, path: '' }
+    ];
+
+    function genImageSet(size, url_stuff) {
+        let set = [];
+        for (const image_size of image_sizes) {
+            set.push({ src: `${src_prefix}${image_size.path}/img-master/${url_stuff}${thumb_suffix}`, scale: image_size.size / size });
         }
+        let defaultSrc = null;
+        for (const image of set) {
+            if (image.scale >= window.devicePixelRatio) {
+                defaultSrc = image.src;
+                break;
+            }
+        }
+        if (!defaultSrc) {
+            defaultSrc = set[set.length - 1].src;
+        }
+        return { set, defaultSrc };
+    }
+
+    // Create a srcset= attribute on the img, with appropriate dpi scaling values
+    // Also update the src= attribute to a value appropriate for current dpi
+    function imgSrcset(img, size, url_stuff) {
+        let imageSet = genImageSet(size, url_stuff);
+        img.srcset = imageSet.set.map(image => `${image.src} ${image.scale}x`).join(', ');
+        img.src = imageSet.defaultSrc;
+        if (!img.attributes.width && !img.style.width) { img.style.width = `${size}px`; }
+        if (!img.attributes.height && !img.style.height) { img.style.height = `${size}px`; }
+    }
+
+    // Set up a css background-image with image-set() where supported, falling back
+    // to a single image
+    function cssImageSet(node, size, url_stuff) {
+        let imageSet = genImageSet(size, url_stuff);
+        let cssImageList = imageSet.set.map(image => `url("${image.src}") ${image.scale}x`).join(', ');
+        node.style.backgroundSize = 'contain';
+        // The way the style properties work, if you try to assign an unsupported value, it does not
+        // take effect, but a supported value replaces the old value. So assign in order of worst
+        // to best
+        // Fallback single image
+        node.style.backgroundImage = `url("${imageSet.defaultSrc}")`;
+        // webkit/blink prefixed image-set
+        node.style.backgroundImage = `-webkit-image-set(${cssImageList})`;
+        // CSS4 proposed standard image-set
+        node.style.backgroundImage = `image-set(${cssImageList})`;
     }
 
     function findParentSize(node) {
@@ -77,10 +110,7 @@
                 if (height && height > size) { size = height; }
                 return size;
             }
-            if (!e.parentElement) {
-                console.log("Couldn't find a parent node with size set for", node);
-                return size;
-            }
+            if (!e.parentElement) { return 0; }
             e = e.parentElement;
         }
     }
@@ -109,9 +139,18 @@
         if (!node.src.startsWith(src_prefix)) { node.dataset.kepstinThumbnail = 'skip'; return; }
 
         let m = node.src.match(src_regexp);
-        if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
+        if (!m) {
+            node.dataset.kepstinThumbnail = 'bad';
+            return;
+        }
 
         let size = findParentSize(node);
+        if (size < 16) { size = Math.max(node.clientWidth, node.clientHeight); }
+        if (size < 16) { size = Math.max(m[1], m[2]); }
+        if (size == 0) {
+            console.log('calculated size is 0 for', node)
+            return;
+        }
         imgSrcset(node, size, m[3]);
         node.style.objectFit = 'contain';
 
@@ -129,13 +168,20 @@
         if (!node.src.startsWith(src_prefix)) { node.dataset.kepstinThumbnail = 'skip'; return; }
 
         let m = node.src.match(src_regexp);
-        if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
+        if (!m) {
+            node.dataset.kepstinThumbnail = 'bad';
+            return;
+        }
 
-        let size = Math.max(m[1], m[2]);
-        if (!size) { size = 1200 };
+        let width = m[1];
+        let height = m[2];
+        let size = Math.max(width, height);
+        if (!size) { width = height = size = 1200 };
+
+        node.width = node.style.width = width;
+        node.height = node.style.height = height;
+
         imgSrcset(node, size, m[3]);
-        node.width = node.style.width = m[1];
-        node.height = node.style.height = m[2];
         node.style.objectFit = 'contain';
 
         node.addEventListener('error', imgErrorHandler);
@@ -151,9 +197,23 @@
 
         if (node.style.backgroundImage.indexOf(src_prefix) == -1) { node.dataset.kepstinThumbnail = 'skip'; return; }
         let m = node.style.backgroundImage.match(src_regexp);
-        if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
+        if (!m) {
+            node.dataset.kepstinThumbnail = 'bad';
+            return;
+        }
         let size = Math.max(node.clientWidth, node.clientHeight);
+        if (size == 0) { size = Math.max(m[1], m[2]); }
+        if (size == 0) {
+            console.log('calculated size is 0 for', node)
+            return;
+        }
+        if (node.firstElementChild) {
+            // There's other stuff inside the DIV, don't do image replacement
+            cssImageSet(node, size, m[3]);
+            node.dataset.kepstinThumbnail = 'ok';
+        }
 
+        // Use IMG tags for images!
         let parentNode = node.parentElement;
         let img = document.createElement('IMG');
         imgSrcset(img, size, m[3]);
@@ -174,9 +234,25 @@
 
         if (node.style.backgroundImage.indexOf(src_prefix) == -1) { node.dataset.kepstinThumbnail = 'skip'; return; }
         let m = node.style.backgroundImage.match(src_regexp);
-        if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
+        if (!m) {
+            node.dataset.kepstinThumbnail = 'bad';
+            return;
+        }
         let size = Math.max(node.clientWidth, node.clientHeight);
+        if (size == 0) { size = Math.max(m[1], m[2]); }
+        if (size == 0) {
+            console.log('calculated size is 0 for', node)
+            return;
+        }
 
+        if (node.firstElementChild) {
+            // There's other stuff inside the A, don't do image replacement
+            cssImageSet(node, size, m[3]);
+            node.dataset.kepstinThumbnail = 'ok';
+            return;
+        }
+
+        // Use IMG tags for images!
         let img = document.createElement('IMG');
         imgSrcset(img, size, m[3]);
         img.alt = '';
