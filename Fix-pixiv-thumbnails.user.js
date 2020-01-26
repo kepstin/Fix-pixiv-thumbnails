@@ -3,7 +3,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20190913.2
+// @version        20190913.3
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
 // @author         Calvin Walton
@@ -54,28 +54,6 @@
                       ${src_prefix}/c/360x360_70/img-master/${url_stuff}${thumb_suffix} ${360 / size}x,
                       ${src_prefix}/c/600x600/img-master/${url_stuff}${thumb_suffix} ${600 / size}x,
                       ${src_prefix}/img-master/${url_stuff}${thumb_suffix} ${1200 / size}x`;
-    }
-
-    // Reconfigure a thumbnail set via css background image (usually on a div tag)
-    function cssBackgroundImage(element) {
-        // In the future this should use https://developer.mozilla.org/en-US/docs/Web/CSS/image-set
-        // but right now only chrome/safari have a vendor-prefixed version. Manually pick the image
-        // based on the devicePixelRatio.
-        let size = Math.max(element.clientWidth, element.clientHeight);
-        let m = element.style.backgroundImage.match(src_regexp);
-        if (!m) { console.log("unsupported image url for thumbnail fixer", element); return false; }
-        if (150 / size >= window.devicePixelRatio) {
-            element.style.backgroundImage = `url(${src_prefix}/c/150x150/img-master/${m[3]}${thumb_suffix})`;
-        } else if (240 / size >= window.devicePixelRatio) {
-            element.style.backgroundImage = `url(${src_prefix}/c/240x240/img-master/${m[3]}${thumb_suffix})`;
-        } else if (360 / size >= window.devicePixelRatio) {
-            element.style.backgroundImage = `url(${src_prefix}/c/360x360_70/img-master/${m[3]}${thumb_suffix})`;
-        } else if (600 / size >= window.devicePixelRatio) {
-            element.style.backgroundImage = `url(${src_prefix}/c/600x600/img-master/${m[3]}${thumb_suffix})`;
-        } else { /* 1200 */
-            element.style.backgroundImage = `url(${src_prefix}/img-master/${m[3]}${thumb_suffix})`;
-        }
-        return true;
     }
 
     function findParentSize(node) {
@@ -132,12 +110,26 @@
     }
 
     function handleDivBackground(node) {
-        if (node.classList.contains('js-lazyload') || node.classList.contains('lazyloaded') || node.classList.contains('lazyloading')) { return; }
         if (node.dataset.kepstinThumbnail) { return; }
 
-        if (cssBackgroundImage(node)) {
-            node.dataset.kepstinThumbnail = 'ok';
-        }
+        if (node.classList.contains('js-lazyload') || node.classList.contains('lazyloaded') || node.classList.contains('lazyloading')) { return; }
+
+        if (node.style.backgroundImage.indexOf(src_prefix) == -1) { node.dataset.kepstinThumbnail = 'skip'; return; }
+        let m = node.style.backgroundImage.match(src_regexp);
+        if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
+        let size = Math.max(node.clientWidth, node.clientHeight);
+
+        let parentNode = node.parentElement;
+        let img = document.createElement('IMG');
+        imgSrcset(img, size, m[3]);
+        img.class = node.class;
+        img.alt = node.getAttribute('alt');
+        img.style.width = `${size}px`;
+        img.style.height = `${size}px`;
+        img.style.objectFit = 'contain';
+        img.dataset.kepstinThumbnail = 'ok';
+
+        node.replaceWith(img);
     }
 
     function onetimeThumbnails(parentNode) {
