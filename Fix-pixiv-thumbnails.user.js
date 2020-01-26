@@ -15,6 +15,21 @@
 // @grant          none
 // ==/UserScript==
 
+// Copyright © 2020 Calvin Walton <calvin.walton@kepstin.ca>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
+// (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
+// merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice (including the next paragraph) shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+// IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 (function() {
     'use strict';
 
@@ -40,7 +55,10 @@
     function genImageSet(size, url_stuff) {
         let set = [];
         for (const image_size of image_sizes) {
-            set.push({ src: `${src_prefix}${image_size.path}/img-master/${url_stuff}${thumb_suffix}`, scale: image_size.size / size });
+            set.push({
+                src: `${src_prefix}${image_size.path}/img-master/${url_stuff}${thumb_suffix}`,
+                scale: image_size.size / size
+            });
         }
         let defaultSrc = null;
         for (const image of set) {
@@ -122,10 +140,7 @@
         if (!node.src.startsWith(src_prefix)) { node.dataset.kepstinThumbnail = 'skip'; return; }
 
         let m = node.src.match(src_regexp);
-        if (!m) {
-            node.dataset.kepstinThumbnail = 'bad';
-            return;
-        }
+        if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
 
         let size = findParentSize(node);
         if (size < 16) { size = Math.max(node.clientWidth, node.clientHeight); }
@@ -143,18 +158,13 @@
 
     function handleLayoutThumbnail(node) {
         if (node.dataset.kepstinThumbnail) { return; }
-
         // Check for lazy-loaded images, which have a temporary URL
         // They'll be updated later when the src is set
         if (node.src.startsWith('data:') || node.src.endsWith('transparent.gif')) { return; }
-
         if (!node.src.startsWith(src_prefix)) { node.dataset.kepstinThumbnail = 'skip'; return; }
 
         let m = node.src.match(src_regexp);
-        if (!m) {
-            node.dataset.kepstinThumbnail = 'bad';
-            return;
-        }
+        if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
 
         let width = m[1];
         let height = m[2];
@@ -173,17 +183,14 @@
 
     function handleDivBackground(node) {
         if (node.dataset.kepstinThumbnail) { return; }
-
         // Check for lazy-loaded images
         // They'll be updated later when the background image (in style attribute) is set
         if (node.classList.contains('js-lazyload') || node.classList.contains('lazyloaded') || node.classList.contains('lazyloading')) { return; }
-
         if (node.style.backgroundImage.indexOf(src_prefix) == -1) { node.dataset.kepstinThumbnail = 'skip'; return; }
+
         let m = node.style.backgroundImage.match(src_regexp);
-        if (!m) {
-            node.dataset.kepstinThumbnail = 'bad';
-            return;
-        }
+        if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
+
         let size = Math.max(node.clientWidth, node.clientHeight);
         if (size == 0) { size = Math.max(m[1], m[2]); }
         if (size == 0) {
@@ -214,13 +221,11 @@
 
     function handleABackground(node) {
         if (node.dataset.kepstinThumbnail) { return; }
-
         if (node.style.backgroundImage.indexOf(src_prefix) == -1) { node.dataset.kepstinThumbnail = 'skip'; return; }
+
         let m = node.style.backgroundImage.match(src_regexp);
-        if (!m) {
-            node.dataset.kepstinThumbnail = 'bad';
-            return;
-        }
+        if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
+
         let size = Math.max(node.clientWidth, node.clientHeight);
         if (size == 0) { size = Math.max(m[1], m[2]); }
         if (size == 0) {
@@ -307,6 +312,11 @@
     if (!window.kepstinThumbnailObserver) {
         onetimeThumbnails(document.firstElementChild);
         window.kepstinThumbnailObserver = new MutationObserver(mutationObserverCallback);
-        window.kepstinThumbnailObserver.observe(document.firstElementChild, { childList: true, subtree: true, attributes: true, attributeFilter: [ 'class', 'src' ] });
+        window.kepstinThumbnailObserver.observe(document.firstElementChild, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: [ 'class', 'src' ]
+        });
     }
 })();
