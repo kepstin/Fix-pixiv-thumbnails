@@ -2,7 +2,8 @@
 // @name           Improve pixiv thumbnails
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
-// @version        20190912.5
+// @license        MIT; https://spdx.org/licenses/MIT.html
+// @version        20190913.1
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
 // @author         Calvin Walton
@@ -115,6 +116,7 @@
         if (node.dataset.kepstinThumbnail) { return; }
 
         if (/transparent.gif$/.test(node.src)) { return; }
+        if (!node.src.startsWith(src_prefix)) { node.dataset.kepstinThumbnail = 'skip'; return; }
 
         let m = node.src.match(src_regexp);
         if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
