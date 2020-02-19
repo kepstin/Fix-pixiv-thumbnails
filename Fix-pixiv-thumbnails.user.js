@@ -3,7 +3,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20200126.1
+// @version        20200218.1
 // @updateURL      https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
@@ -30,11 +30,11 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-(function() {
+(function () {
     'use strict';
 
     // The src prefix: scheme and domain
-    let src_prefix = 'https://i.pximg.net';
+    let src_prefix = 'https://i-cf.pximg.net';
     // The src suffix for thumbnails
     let thumb_suffix = '_master1200.jpg';
     // A regular expression that matches pixiv thumbnail urls
@@ -42,7 +42,7 @@
     // $1: thumbnail width (optional)
     // $2: thumbnail height (optional)
     // $3: everything in the URL after the thumbnail size up to the image suffix
-    let src_regexp = /https?:\/\/i\.pximg\.net(?:\/c\/(\d+)x(\d+)(?:_[^\/]*)?)?\/(?:custom-thumb|img-master)\/(.*)_(?:custom|master|square)1200.jpg/;
+    let src_regexp = /https?:\/\/i(?:-cf)?\.pximg\.net(?:\/c\/(\d+)x(\d+)(?:_[^\/]*)?)?\/(?:custom-thumb|img-master)\/(.*)_(?:custom|master|square)1200.jpg/;
 
     const image_sizes = [
         { size: 150, path: '/c/150x150' },
@@ -121,14 +121,14 @@
     // load
     function imgErrorHandler(event) {
         let self = this;
-        if ((self.dataset.kepstinRetry|0) > 6) {
+        if ((self.dataset.kepstinRetry | 0) > 6) {
             console.log("gave up loading", self.src);
             return;
         }
-        self.dataset.kepstinRetry = (self.dataset.kepstinRetry|0) + 1;
-        let sleep = Math.min((self.dataset.kepstinRetry|0) * 2 + 1, 10);
+        self.dataset.kepstinRetry = (self.dataset.kepstinRetry | 0) + 1;
+        let sleep = Math.min((self.dataset.kepstinRetry | 0) * 2 + 1, 10);
         console.log("error loading", self.src, "try", self.dataset.kepstinRetry, "sleep", sleep);
-        window.setTimeout(function() { console.log("reloading", self.src); self.src = self.src; }, sleep * 1000);
+        window.setTimeout(function () { console.log("reloading", self.src); self.src = self.src; }, sleep * 1000);
         event.stopImmediatePropagation();
         event.stopPropagation();
         return false;
@@ -136,8 +136,6 @@
 
     function handleImg(node) {
         if (node.dataset.kepstinThumbnail) { return; }
-
-        if (!node.src.startsWith(src_prefix)) { node.dataset.kepstinThumbnail = 'skip'; return; }
 
         let m = node.src.match(src_regexp);
         if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
@@ -161,7 +159,6 @@
         // Check for lazy-loaded images, which have a temporary URL
         // They'll be updated later when the src is set
         if (node.src.startsWith('data:') || node.src.endsWith('transparent.gif')) { return; }
-        if (!node.src.startsWith(src_prefix)) { node.dataset.kepstinThumbnail = 'skip'; return; }
 
         let m = node.src.match(src_regexp);
         if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
@@ -186,7 +183,6 @@
         // Check for lazy-loaded images
         // They'll be updated later when the background image (in style attribute) is set
         if (node.classList.contains('js-lazyload') || node.classList.contains('lazyloaded') || node.classList.contains('lazyloading')) { return; }
-        if (node.style.backgroundImage.indexOf(src_prefix) == -1) { node.dataset.kepstinThumbnail = 'skip'; return; }
 
         let m = node.style.backgroundImage.match(src_regexp);
         if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
@@ -221,7 +217,6 @@
 
     function handleABackground(node) {
         if (node.dataset.kepstinThumbnail) { return; }
-        if (node.style.backgroundImage.indexOf(src_prefix) == -1) { node.dataset.kepstinThumbnail = 'skip'; return; }
 
         let m = node.style.backgroundImage.match(src_regexp);
         if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
@@ -316,7 +311,7 @@
             childList: true,
             subtree: true,
             attributes: true,
-            attributeFilter: [ 'class', 'src' ]
+            attributeFilter: ['class', 'src']
         });
     }
 })();
