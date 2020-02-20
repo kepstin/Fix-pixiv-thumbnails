@@ -228,27 +228,10 @@
             return;
         }
 
-        if (node.firstElementChild) {
-            // There's other stuff inside the A, don't do image replacement
-            cssImageSet(node, size, m[3]);
-            node.dataset.kepstinThumbnail = 'ok';
-            return;
-        }
-
-        // Use IMG tags for images!
-        let img = document.createElement('IMG');
-        imgSrcset(img, size, m[3]);
-        img.alt = '';
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'contain';
-        img.style.position = 'absolute';
-
-        img.addEventListener('error', imgErrorHandler);
-        img.dataset.kepstinThumbnail = 'ok';
-
-        node.style.backgroundImage = '';
-        node.prepend(img);
+        // There's other stuff inside the A, don't do image replacement
+        cssImageSet(node, size, m[3]);
+        node.dataset.kepstinThumbnail = 'ok';
+        return;
     }
 
     function onetimeThumbnails(parentNode) {
