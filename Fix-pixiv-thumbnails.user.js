@@ -135,10 +135,11 @@
     }
 
     function handleImg(node) {
-        if (node.dataset.kepstinThumbnail) { return; }
+        if (node.dataset.kepstinThumbnail == 'bad') { return; }
 
         let m = node.src.match(src_regexp);
         if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
+        if (node.dataset.kepstinThumbnail == m[3]) { return; }
 
         let size = findParentSize(node);
         if (size < 16) { size = Math.max(node.clientWidth, node.clientHeight); }
@@ -151,17 +152,18 @@
         node.style.objectFit = 'contain';
 
         node.addEventListener('error', imgErrorHandler);
-        node.dataset.kepstinThumbnail = 'ok';
+        node.dataset.kepstinThumbnail = m[3];
     }
 
     function handleLayoutThumbnail(node) {
-        if (node.dataset.kepstinThumbnail) { return; }
+        if (node.dataset.kepstinThumbnail == 'bad') { return; }
         // Check for lazy-loaded images, which have a temporary URL
         // They'll be updated later when the src is set
         if (node.src.startsWith('data:') || node.src.endsWith('transparent.gif')) { return; }
 
         let m = node.src.match(src_regexp);
         if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
+        if (node.dataset.kepstinThumbnail == m[3]) { return; }
 
         let width = m[1];
         let height = m[2];
@@ -175,17 +177,18 @@
         node.style.objectFit = 'contain';
 
         node.addEventListener('error', imgErrorHandler);
-        node.dataset.kepstinThumbnail = 'ok';
+        node.dataset.kepstinThumbnail = m[3];
     }
 
     function handleDivBackground(node) {
-        if (node.dataset.kepstinThumbnail) { return; }
+        if (node.dataset.kepstinThumbnail == 'bad') { return; }
         // Check for lazy-loaded images
         // They'll be updated later when the background image (in style attribute) is set
         if (node.classList.contains('js-lazyload') || node.classList.contains('lazyloaded') || node.classList.contains('lazyloading')) { return; }
 
         let m = node.style.backgroundImage.match(src_regexp);
         if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
+        if (node.dataset.kepstinThumbnail == m[3]) { return; }
 
         let size = Math.max(node.clientWidth, node.clientHeight);
         if (size == 0) { size = Math.max(m[1], m[2]); }
@@ -193,14 +196,19 @@
             console.log('calculated size is 0 for', node)
             return;
         }
-        if (node.firstElementChild) {
-            // There's other stuff inside the DIV, don't do image replacement
-            cssImageSet(node, size, m[3]);
-            node.dataset.kepstinThumbnail = 'ok';
+        let childNode = node.firstElementChild;
+        if (childNode) {
+            if (childNode.nodeName == 'IMG' && childNode.dataset.kepstinThumbnail) {
+                node.removeChild(childNode);
+            } else {
+                // There's other stuff inside the DIV, don't do image replacement
+                cssImageSet(node, size, m[3]);
+                node.dataset.kepstinThumbnail = m[3];
+                return;
+            }
         }
 
         // Use IMG tags for images!
-        let parentNode = node.parentElement;
         let img = document.createElement('IMG');
         imgSrcset(img, size, m[3]);
         img.class = node.class;
@@ -210,16 +218,17 @@
         img.style.objectFit = 'contain';
 
         img.addEventListener('error', imgErrorHandler);
-        img.dataset.kepstinThumbnail = 'ok';
+        img.dataset.kepstinThumbnail = m[3];
 
         node.replaceWith(img);
     }
 
     function handleABackground(node) {
-        if (node.dataset.kepstinThumbnail) { return; }
+        if (node.dataset.kepstinThumbnail == 'bad') { return; }
 
         let m = node.style.backgroundImage.match(src_regexp);
         if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
+        if (node.dataset.kepstinThumbnail == m[3]) { return; }
 
         let size = Math.max(node.clientWidth, node.clientHeight);
         if (size == 0) { size = Math.max(m[1], m[2]); }
@@ -228,9 +237,9 @@
             return;
         }
 
-        // There's other stuff inside the A, don't do image replacement
+        // Don't do image replacement on A, it breaks the History page
         cssImageSet(node, size, m[3]);
-        node.dataset.kepstinThumbnail = 'ok';
+        node.dataset.kepstinThumbnail = m[3];
         return;
     }
 
