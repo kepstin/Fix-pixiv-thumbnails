@@ -286,6 +286,10 @@
                         if (mutation.target.style.backgroundImage) {
                             handleDivBackground(mutation.target);
                         }
+                    } else if (mutation.target.nodeName == 'A') {
+                        if (mutation.target.style.backgroundImage) {
+                            handleABackground(mutation.target);
+                        }
                     } else if (mutation.target.nodeName == 'IMG') {
                         if (mutation.target.parentElement.classList.contains('_layout-thumbnail')) {
                             handleLayoutThumbnail(mutation.target);
@@ -303,7 +307,7 @@
             childList: true,
             subtree: true,
             attributes: true,
-            attributeFilter: ['class', 'src']
+            attributeFilter: ['class', 'src', 'style']
         });
     }
 })();
