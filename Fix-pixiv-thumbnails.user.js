@@ -3,7 +3,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20200220.3
+// @version        20200224.1
 // @updateURL      https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
@@ -176,16 +176,11 @@
             console.log('calculated size is 0 for', node)
             return;
         }
-        let childNode = node.firstElementChild;
-        if (childNode) {
-            if (childNode.nodeName == 'IMG' && childNode.dataset.kepstinThumbnail) {
-                node.removeChild(childNode);
-            } else {
-                // There's other stuff inside the DIV, don't do image replacement
-                cssImageSet(node, size, m[3]);
-                node.dataset.kepstinThumbnail = m[3];
-                return;
-            }
+        if (node.firstElementChild) {
+            // There's other stuff inside the DIV, don't do image replacement
+            cssImageSet(node, size, m[3]);
+            node.dataset.kepstinThumbnail = m[3];
+            return;
         }
 
         // Use IMG tags for images!
