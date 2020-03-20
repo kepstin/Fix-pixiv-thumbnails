@@ -3,7 +3,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20200224.1
+// @version        20200319.1
 // @updateURL      https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
@@ -33,17 +33,18 @@
 (function () {
     'use strict';
 
-    // The src prefix: scheme and domain
-    let src_prefix = 'https://i-cf.pximg.net';
     // The src suffix for thumbnails
-    let thumb_suffix = '_master1200.jpg';
+    const thumb_suffix = '_master1200.jpg';
     // A regular expression that matches pixiv thumbnail urls
-    // Has 3 captures:
-    // $1: thumbnail width (optional)
-    // $2: thumbnail height (optional)
-    // $3: everything in the URL after the thumbnail size up to the image suffix
-    let src_regexp = /https?:\/\/i(?:-cf)?\.pximg\.net(?:\/c\/(\d+)x(\d+)(?:_[^\/]*)?)?\/(?:custom-thumb|img-master)\/(.*)_(?:custom|master|square)1200.jpg/;
+    // Has 4 captures:
+    // $1: domain name
+    // $2: thumbnail width (optional)
+    // $3: thumbnail height (optional)
+    // $4: everything in the URL after the thumbnail size up to the image suffix
+    const src_regexp = /https?:\/\/((?:i|i-cf)\.pximg\.net)(?:\/c\/(\d+)x(\d+)(?:_[^\/]*)?)?\/(?:custom-thumb|img-master)\/(.*)_(?:custom|master|square)1200.jpg/;
 
+    // List of image sizes and paths possible for original aspect thumbnail images
+    // This must be in order from small to large for the image set generation to work
     const image_sizes = [
         { size: 150, path: '/c/150x150' },
         { size: 240, path: '/c/240x240' },
@@ -52,11 +53,13 @@
         { size: 1200, path: '' }
     ];
 
-    function genImageSet(size, url_stuff) {
+    // Generate a list of original thumbnail images in various sizes for an image,
+    // and determine a default image based on the display size and screen resolution
+    function genImageSet(size, m) {
         let set = [];
         for (const image_size of image_sizes) {
             set.push({
-                src: `${src_prefix}${image_size.path}/img-master/${url_stuff}${thumb_suffix}`,
+                src: `https://${m.domain}${image_size.path}/img-master/${m.path}${thumb_suffix}`,
                 scale: image_size.size / size
             });
         }
@@ -75,8 +78,8 @@
 
     // Create a srcset= attribute on the img, with appropriate dpi scaling values
     // Also update the src= attribute to a value appropriate for current dpi
-    function imgSrcset(img, size, url_stuff) {
-        let imageSet = genImageSet(size, url_stuff);
+    function imgSrcset(img, size, m) {
+        let imageSet = genImageSet(size, m);
         img.srcset = imageSet.set.map(image => `${image.src} ${image.scale}x`).join(', ');
         img.src = imageSet.defaultSrc;
         if (!img.attributes.width && !img.style.width) { img.style.width = `${size}px`; }
@@ -85,8 +88,8 @@
 
     // Set up a css background-image with image-set() where supported, falling back
     // to a single image
-    function cssImageSet(node, size, url_stuff) {
-        let imageSet = genImageSet(size, url_stuff);
+    function cssImageSet(node, size, m) {
+        let imageSet = genImageSet(size, m);
         let cssImageList = imageSet.set.map(image => `url("${image.src}") ${image.scale}x`).join(', ');
         node.style.backgroundSize = 'contain';
         // The way the style properties work, if you try to assign an unsupported value, it does not
@@ -98,6 +101,15 @@
         node.style.backgroundImage = `-webkit-image-set(${cssImageList})`;
         // CSS4 proposed standard image-set
         node.style.backgroundImage = `image-set(${cssImageList})`;
+    }
+
+    // Look for a URL pattern for a thumbnail image in a string and return its properties
+    // Returns null if no image found, otherwise a structure containing the domain, width, height, path.
+    function matchThumbnail(str) {
+        let m = str.match(src_regexp);
+        if (!m) { return null; }
+        let [_, domain, width, height, path] = m;
+        return { domain, width, height, path };
     }
 
     function findParentSize(node) {
@@ -119,21 +131,21 @@
     function handleImg(node) {
         if (node.dataset.kepstinThumbnail == 'bad') { return; }
 
-        let m = node.src.match(src_regexp);
+        let m = matchThumbnail(node.src);
         if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
-        if (node.dataset.kepstinThumbnail == m[3]) { return; }
+        if (node.dataset.kepstinThumbnail == m.path) { return; }
 
         let size = findParentSize(node);
         if (size < 16) { size = Math.max(node.clientWidth, node.clientHeight); }
-        if (size < 16) { size = Math.max(m[1], m[2]); }
+        if (size < 16) { size = Math.max(m.width, m.height); }
         if (size == 0) {
             console.log('calculated size is 0 for', node)
             return;
         }
-        imgSrcset(node, size, m[3]);
+        imgSrcset(node, size, m);
         node.style.objectFit = 'contain';
 
-        node.dataset.kepstinThumbnail = m[3];
+        node.dataset.kepstinThumbnail = m.path;
     }
 
     function handleLayoutThumbnail(node) {
@@ -142,22 +154,22 @@
         // They'll be updated later when the src is set
         if (node.src.startsWith('data:') || node.src.endsWith('transparent.gif')) { return; }
 
-        let m = node.src.match(src_regexp);
+        let m = matchThumbnail(node.src);
         if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
-        if (node.dataset.kepstinThumbnail == m[3]) { return; }
+        if (node.dataset.kepstinThumbnail == m.path) { return; }
 
-        let width = m[1];
-        let height = m[2];
+        let width = m.width;
+        let height = m.height;
         let size = Math.max(width, height);
         if (!size) { width = height = size = 1200 };
 
         node.width = node.style.width = width;
         node.height = node.style.height = height;
 
-        imgSrcset(node, size, m[3]);
+        imgSrcset(node, size, m);
         node.style.objectFit = 'contain';
 
-        node.dataset.kepstinThumbnail = m[3];
+        node.dataset.kepstinThumbnail = m.path;
     }
 
     function handleDivBackground(node) {
@@ -166,33 +178,33 @@
         // They'll be updated later when the background image (in style attribute) is set
         if (node.classList.contains('js-lazyload') || node.classList.contains('lazyloaded') || node.classList.contains('lazyloading')) { return; }
 
-        let m = node.style.backgroundImage.match(src_regexp);
+        let m = matchThumbnail(node.style.backgroundImage);
         if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
-        if (node.dataset.kepstinThumbnail == m[3]) { return; }
+        if (node.dataset.kepstinThumbnail == m.path) { return; }
 
         let size = Math.max(node.clientWidth, node.clientHeight);
-        if (size == 0) { size = Math.max(m[1], m[2]); }
+        if (size == 0) { size = Math.max(m.width, m.height); }
         if (size == 0) {
             console.log('calculated size is 0 for', node)
             return;
         }
         if (node.firstElementChild) {
             // There's other stuff inside the DIV, don't do image replacement
-            cssImageSet(node, size, m[3]);
-            node.dataset.kepstinThumbnail = m[3];
+            cssImageSet(node, size, m);
+            node.dataset.kepstinThumbnail = m.path;
             return;
         }
 
         // Use IMG tags for images!
         let img = document.createElement('IMG');
-        imgSrcset(img, size, m[3]);
+        imgSrcset(img, size, m);
         img.class = node.class;
         img.alt = node.getAttribute('alt');
         img.style.width = node.style.width;
         img.style.height = node.style.height;
         img.style.objectFit = 'contain';
 
-        img.dataset.kepstinThumbnail = m[3];
+        img.dataset.kepstinThumbnail = m.path;
 
         node.replaceWith(img);
     }
@@ -200,20 +212,20 @@
     function handleABackground(node) {
         if (node.dataset.kepstinThumbnail == 'bad') { return; }
 
-        let m = node.style.backgroundImage.match(src_regexp);
+        let m = matchThumbnail(node.style.backgroundImage);
         if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
-        if (node.dataset.kepstinThumbnail == m[3]) { return; }
+        if (node.dataset.kepstinThumbnail == m.path) { return; }
 
         let size = Math.max(node.clientWidth, node.clientHeight);
-        if (size == 0) { size = Math.max(m[1], m[2]); }
+        if (size == 0) { size = Math.max(m.width, m.height); }
         if (size == 0) {
             console.log('calculated size is 0 for', node)
             return;
         }
 
         // Don't do image replacement on A, it breaks the History page
-        cssImageSet(node, size, m[3]);
-        node.dataset.kepstinThumbnail = m[3];
+        cssImageSet(node, size, m);
+        node.dataset.kepstinThumbnail = m.path;
         return;
     }
 
