@@ -3,7 +3,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20200319.1
+// @version        20200321.1
 // @updateURL      https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
@@ -41,7 +41,7 @@
     // $2: thumbnail width (optional)
     // $3: thumbnail height (optional)
     // $4: everything in the URL after the thumbnail size up to the image suffix
-    const src_regexp = /https?:\/\/((?:i|i-cf)\.pximg\.net)(?:\/c\/(\d+)x(\d+)(?:_[^\/]*)?)?\/(?:custom-thumb|img-master)\/(.*)_(?:custom|master|square)1200.jpg/;
+    const src_regexp = /https?:\/\/(i[^.]*\.pximg\.net)(?:\/c\/(\d+)x(\d+)(?:_[^\/]*)?)?\/(?:custom-thumb|img-master)\/(.*)_(?:custom|master|square)1200.jpg/;
 
     // List of image sizes and paths possible for original aspect thumbnail images
     // This must be in order from small to large for the image set generation to work
