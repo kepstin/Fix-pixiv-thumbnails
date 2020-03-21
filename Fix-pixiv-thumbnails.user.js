@@ -3,7 +3,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20200321.1
+// @version        20200321.2
 // @updateURL      https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
@@ -108,7 +108,13 @@
     function matchThumbnail(str) {
         let m = str.match(src_regexp);
         if (!m) { return null; }
+
         let [_, domain, width, height, path] = m;
+
+        // The 1200 size does not include size in the URL, so fill in the values here when missing
+        width = width || 1200;
+        height = height || 1200;
+
         return { domain, width, height, path };
     }
 
@@ -138,10 +144,6 @@
         let size = findParentSize(node);
         if (size < 16) { size = Math.max(node.clientWidth, node.clientHeight); }
         if (size < 16) { size = Math.max(m.width, m.height); }
-        if (size == 0) {
-            console.log('calculated size is 0 for', node)
-            return;
-        }
         imgSrcset(node, size, m);
         node.style.objectFit = 'contain';
 
@@ -161,7 +163,6 @@
         let width = m.width;
         let height = m.height;
         let size = Math.max(width, height);
-        if (!size) { width = height = size = 1200 };
 
         node.width = node.style.width = width;
         node.height = node.style.height = height;
@@ -184,10 +185,7 @@
 
         let size = Math.max(node.clientWidth, node.clientHeight);
         if (size == 0) { size = Math.max(m.width, m.height); }
-        if (size == 0) {
-            console.log('calculated size is 0 for', node)
-            return;
-        }
+
         if (node.firstElementChild) {
             // There's other stuff inside the DIV, don't do image replacement
             cssImageSet(node, size, m);
@@ -218,10 +216,6 @@
 
         let size = Math.max(node.clientWidth, node.clientHeight);
         if (size == 0) { size = Math.max(m.width, m.height); }
-        if (size == 0) {
-            console.log('calculated size is 0 for', node)
-            return;
-        }
 
         // Don't do image replacement on A, it breaks the History page
         cssImageSet(node, size, m);
