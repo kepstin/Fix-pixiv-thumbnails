@@ -1,12 +1,21 @@
-# List of known thumbnail URLs for pixiv
+# List of known URLs for pixiv image hosting
 
-**bold** is unique size for image type
+## Domain Names
 
-## illustration
+* `i.pximg.net`: Actually a wildcard, `*.pximg.net`. Servers use IP address range from IDC Frontier Inc.
+* `i-cf.pximg.net`: Cloudflare CDN services, via DNS delegation.
+* `i-f.pximg.net`: Fastly CDN services, via CNAME.
+* `imgaz.pixiv.net`: Backend servers? Using IP address range from IDC Frontier Inc, but different/smaller range than `i.pximg.net`.
+
+## Illustration
 
 Original image is at `https://i.pximg.net/img-original/img/YYYY/MM/DD/HH/MM/SS/NNNNNNNN_pN.jpg`
 
-### thumbnail (preserve aspect ratio)
+## Thumbnail
+
+**bold** is unique size for image type
+
+### Preserve aspect ratio
 
 Image path: `…/img-master/img/YYYY/MM/DD/HH/MM/SS/NNNNNNNN_pN_master1200.jpg`
 
@@ -25,10 +34,13 @@ Image path prefixes:
 * **768x1200**: `https://i.pximg.net/c/768x1200_80`
 * 1200x1200: `https://i.pximg.net` (no `/c/` path specified, default size?)
 
-### thumbnail (square crop)
+### Square crop
 
-Image path (custom): `…/custom-thumb/img/YYYY/MM/DD/HH/MM/SS/NNNNNNNN_pN_custom1200.jpg`
-Image path (auto): `…/img-master/img/YYYY/MM/DD/HH/MM/SS/NNNNNNNN_pN_square1200.jpg`
+Two possibilities for crop.
+
+Either automatic crop (takes top left corner of image): `…/img-master/img/YYYY/MM/DD/HH/MM/SS/NNNNNNNN_pN_square1200.jpg`
+
+Or uploader-set crop: `…/custom-thumb/img/YYYY/MM/DD/HH/MM/SS/NNNNNNNN_pN_custom1200.jpg`
 
 * 100x100: `https://i.pximg.net/c/100x100`
 * 128x128: `https://i.pximg.net/c/128x128`
@@ -42,9 +54,9 @@ Image path (auto): `…/img-master/img/YYYY/MM/DD/HH/MM/SS/NNNNNNNN_pN_square120
 * 600x600: `https://i.pximg.net/c/600x600`
 * 1200x1200: `https://i.pximg.net` (no `/c/` path specified, default size?)
 
-### thumbnail (other shapes)
+### Other shapes
 
-* 300x200 crop (howto): `https://i.pximg.net/c/300x200_a2/img-master/img/YYYY/MM/DD/HH/MM/SS/NNNNNNNN_pN_master1200.jpg`
+* 300x200 crop (used on howto page): `https://i.pximg.net/c/300x200_a2/img-master/img/YYYY/MM/DD/HH/MM/SS/NNNNNNNN_pN_master1200.jpg`
 
 ## Notes
 
