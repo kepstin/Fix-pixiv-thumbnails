@@ -41,7 +41,7 @@
     // $2: thumbnail width (optional)
     // $3: thumbnail height (optional)
     // $4: everything in the URL after the thumbnail size up to the image suffix
-    const src_regexp = /https?:\/\/(i[^.]*\.pximg\.net)(?:\/c\/(\d+)x(\d+)(?:_[^\/]*)?)?\/(?:custom-thumb|img-master)\/(.*)_(?:custom|master|square)1200.jpg/;
+    const src_regexp = /https?:\/\/(i[^.]*\.pximg\.net)(?:\/c\/(\d+)x(\d+)(?:_[^\/]*)?)?\/(?:custom-thumb|img-master)\/(.*?)_(?:custom|master|square)1200.jpg/;
 
     // List of image sizes and paths possible for original aspect thumbnail images
     // This must be in order from small to large for the image set generation to work
