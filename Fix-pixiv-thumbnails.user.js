@@ -3,7 +3,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20200511.1
+// @version        20200523.1
 // @updateURL      https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
@@ -33,8 +33,13 @@
 (function () {
     'use strict';
 
+    // Use an alternate domain (CDN) to load images
+    // Configure this by setting `kepstinDomainOverride` in LocalStorage
+    let domainOverride = null;
+
     // The src suffix for thumbnails
     const thumb_suffix = '_master1200.jpg';
+
     // A regular expression that matches pixiv thumbnail urls
     // Has 4 captures:
     // $1: domain name
@@ -116,6 +121,10 @@
         // The 1200 size does not include size in the URL, so fill in the values here when missing
         width = width || 1200;
         height = height || 1200;
+
+        if (domainOverride) {
+            domain = domainOverride;
+        }
 
         return { domain, width, height, path };
     }
@@ -282,7 +291,19 @@
         }
     }
 
+    function updateSettings() {
+        try {
+            domainOverride = localStorage.getItem('kepstinDomainOverride');
+        } catch (e) {
+            console.log(`Error loading Fix-pixiv-thumbnails settings: ${e}`)
+        }
+        console.log(`Fix-pixiv-thumbnails domain override: ${domainOverride}`)
+    }
+
     if (!window.kepstinThumbnailObserver) {
+        updateSettings();
+        window.addEventListener('storage', updateSettings);
+
         onetimeThumbnails(document.firstElementChild);
         window.kepstinThumbnailObserver = new MutationObserver(mutationObserverCallback);
         window.kepstinThumbnailObserver.observe(document.firstElementChild, {
