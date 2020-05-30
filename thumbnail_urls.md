@@ -52,6 +52,7 @@ Or uploader-set crop: `…/custom-thumb/img/YYYY/MM/DD/HH/MM/SS/NNNNNNNN_pN_cust
 * 360x360: `https://i.pximg.net/c/360x360_70`
 * 540x540: `https://i.pximg.net/c/540x540_70`
 * 600x600: `https://i.pximg.net/c/600x600`
+* **1200x???**: `https://i.pximg.net/c/w1200_q80_a2_g1_u1_cr0:0.076:1:0.677`
 * 1200x1200: `https://i.pximg.net` (no `/c/` path specified, default size?)
 
 ### Other shapes
