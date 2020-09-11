@@ -303,7 +303,8 @@
 
     if (!window.kepstinThumbnailObserver) {
         updateSettings();
-        window.addEventListener('storage', updateSettings);
+        // Disabled temporarily? It's inconsistant and there's no UI yet.
+        //window.addEventListener('storage', updateSettings);
 
         onetimeThumbnails(document.firstElementChild);
         window.kepstinThumbnailObserver = new MutationObserver(mutationObserverCallback);
