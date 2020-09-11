@@ -130,16 +130,11 @@
     }
 
     function findParentSize(node) {
-        let size = 0;
         let e = node;
-        while (!size) {
-            if (e.attributes.width && e.attributes.height) {
-                let width = +e.attributes.width.value;
-                let height = +e.attributes.height.value;
-                if (width && width > size) { size = width; }
-                if (height && height > size) { size = height; }
-                return size;
-            }
+        while (true) {
+            let cstyle = window.getComputedStyle(node);
+            let size = Math.max(+cstyle.width.replace(/[^\d\.\-]/g, ''), +cstyle.height.replace(/[^\d\.\-]/g, ''));
+            if (size > 0) { return size; }
             if (!e.parentElement) { return 0; }
             e = e.parentElement;
         }
@@ -153,8 +148,7 @@
         if (node.dataset.kepstinThumbnail == m.path) { return; }
 
         let size = findParentSize(node);
-        if (size < 16) { size = Math.max(node.clientWidth, node.clientHeight); }
-        if (size < 16) { size = Math.max(m.width, m.height); }
+        if (!(size > 16) { size = Math.max(m.width, m.height); }
         imgSrcset(node, size, m);
         node.style.objectFit = 'contain';
 
@@ -195,8 +189,8 @@
         if (node.dataset.kepstinThumbnail == m.path) { return; }
 
         let cstyle = window.getComputedStyle(node);
-        let size = Math.max(Number(cstyle.width.replace(/[^\d\.\-]/g, '')), Number(cstyle.height.replace(/[^\d\.\-]/g, '')));
-        if (size == 0) { size = Math.max(m.width, m.height); }
+        let size = Math.max(+cstyle.width.replace(/[^\d\.\-]/g, ''), +cstyle.height.replace(/[^\d\.\-]/g, ''));
+        if (!(size > 0) { size = Math.max(m.width, m.height); }
 
         if (node.firstElementChild) {
             // There's other stuff inside the DIV, don't do image replacement
@@ -227,8 +221,8 @@
         if (node.dataset.kepstinThumbnail == m.path) { return; }
 
         let cstyle = window.getComputedStyle(node);
-        let size = Math.max(Number(cstyle.width.replace(/[^\d\.\-]/g, '')), Number(cstyle.height.replace(/[^\d\.\-]/g, '')));
-        if (size == 0) { size = Math.max(m.width, m.height); }
+        let size = Math.max(+cstyle.width.replace(/[^\d\.\-]/g, ''), +cstyle.height.replace(/[^\d\.\-]/g, ''));
+        if (!(size > 0) { size = Math.max(m.width, m.height); }
 
         // Don't do image replacement on A, it breaks the History page
         cssImageSet(node, size, m);
