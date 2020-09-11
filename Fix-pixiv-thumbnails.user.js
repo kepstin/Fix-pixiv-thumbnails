@@ -194,10 +194,8 @@
         if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
         if (node.dataset.kepstinThumbnail == m.path) { return; }
 
-        let size = Math.max(
-            Number(node.style.width.replace(/[^\d\.\-]/g, '')),
-            Number(node.style.height.replace(/[^\d\.\-]/g, ''))
-        );
+        let cstyle = window.getComputedStyle(node);
+        let size = Math.max(Number(cstyle.width.replace(/[^\d\.\-]/g, '')), Number(cstyle.height.replace(/[^\d\.\-]/g, '')));
         if (size == 0) { size = Math.max(m.width, m.height); }
 
         if (node.firstElementChild) {
@@ -228,7 +226,8 @@
         if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
         if (node.dataset.kepstinThumbnail == m.path) { return; }
 
-        let size = Math.max(node.clientWidth, node.clientHeight);
+        let cstyle = window.getComputedStyle(node);
+        let size = Math.max(Number(cstyle.width.replace(/[^\d\.\-]/g, '')), Number(cstyle.height.replace(/[^\d\.\-]/g, '')));
         if (size == 0) { size = Math.max(m.width, m.height); }
 
         // Don't do image replacement on A, it breaks the History page
