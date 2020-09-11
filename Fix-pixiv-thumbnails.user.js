@@ -3,7 +3,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20200910.2
+// @version        20200910.3
 // @updateURL      https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
@@ -148,7 +148,7 @@
         if (node.dataset.kepstinThumbnail == m.path) { return; }
 
         let size = findParentSize(node);
-        if (!(size > 16) { size = Math.max(m.width, m.height); }
+        if (!(size > 16)) { size = Math.max(m.width, m.height); }
         imgSrcset(node, size, m);
         node.style.objectFit = 'contain';
 
@@ -190,7 +190,7 @@
 
         let cstyle = window.getComputedStyle(node);
         let size = Math.max(+cstyle.width.replace(/[^\d\.\-]/g, ''), +cstyle.height.replace(/[^\d\.\-]/g, ''));
-        if (!(size > 0) { size = Math.max(m.width, m.height); }
+        if (!(size > 0)) { size = Math.max(m.width, m.height); }
 
         if (node.firstElementChild) {
             // There's other stuff inside the DIV, don't do image replacement
@@ -222,7 +222,7 @@
 
         let cstyle = window.getComputedStyle(node);
         let size = Math.max(+cstyle.width.replace(/[^\d\.\-]/g, ''), +cstyle.height.replace(/[^\d\.\-]/g, ''));
-        if (!(size > 0) { size = Math.max(m.width, m.height); }
+        if (!(size > 0)) { size = Math.max(m.width, m.height); }
 
         // Don't do image replacement on A, it breaks the History page
         cssImageSet(node, size, m);
