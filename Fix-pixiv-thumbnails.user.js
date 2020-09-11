@@ -299,7 +299,6 @@
         } catch (e) {
             console.log(`Error loading Fix-pixiv-thumbnails settings: ${e}`)
         }
-        console.log(`Fix-pixiv-thumbnails domain override: ${domainOverride}`)
     }
 
     if (!window.kepstinThumbnailObserver) {
