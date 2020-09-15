@@ -3,7 +3,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20200910.4
+// @version        20200915.1
 // @updateURL      https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
@@ -129,12 +129,26 @@
         return { domain, width, height, path };
     }
 
+    function cssPx(value) {
+        if (!value.endsWith('px')) {
+            return NaN;
+        }
+        return +value.replace(/[^\d\.\-]/g, '');
+    }
+
     function findParentSize(node) {
         let e = node;
         while (true) {
-            let cstyle = window.getComputedStyle(node);
-            let size = Math.max(+cstyle.width.replace(/[^\d\.\-]/g, ''), +cstyle.height.replace(/[^\d\.\-]/g, ''));
+            let size = Math.max(node.width, node.height);
             if (size > 0) { return size; }
+
+            size = Math.max(cssPx(node.style.width, node.style.height));
+            if (size > 0) { return size; }
+
+            let cstyle = window.getComputedStyle(node);
+            size = Math.max(cssPx(cstyle.width), cssPx(cstyle.height));
+            if (size > 0) { return size; }
+
             if (!e.parentElement) { return 0; }
             e = e.parentElement;
         }
@@ -188,9 +202,12 @@
         if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
         if (node.dataset.kepstinThumbnail == m.path) { return; }
 
-        node.style.backgroundImage = "";
-        let cstyle = window.getComputedStyle(node);
-        let size = Math.max(+cstyle.width.replace(/[^\d\.\-]/g, ''), +cstyle.height.replace(/[^\d\.\-]/g, ''));
+        node.style.backgroundImage = '';
+        let size = Math.max(cssPx(node.style.width), cssPx(node.style.height));
+        if (!(size > 0)) {
+            let cstyle = window.getComputedStyle(node);
+            size = Math.max(cssPx(cstyle.width), cssPx(cstyle.height));
+        }
         if (!(size > 0)) { size = Math.max(m.width, m.height); }
 
         if (node.firstElementChild) {
@@ -221,9 +238,12 @@
         if (!m) { node.dataset.kepstinThumbnail = 'bad'; return; }
         if (node.dataset.kepstinThumbnail == m.path) { return; }
 
-        node.style.backgroundImage = "";
-        let cstyle = window.getComputedStyle(node);
-        let size = Math.max(+cstyle.width.replace(/[^\d\.\-]/g, ''), +cstyle.height.replace(/[^\d\.\-]/g, ''));
+        node.style.backgroundImage = '';
+        let size = Math.max(cssPx(node.style.width), cssPx(node.style.height));
+        if (!(size > 0)) {
+            let cstyle = window.getComputedStyle(node);
+            size = Math.max(cssPx(cstyle.width), cssPx(cstyle.height));
+        }
         if (!(size > 0)) { size = Math.max(m.width, m.height); }
 
         // Don't do image replacement on A, it breaks the History page
