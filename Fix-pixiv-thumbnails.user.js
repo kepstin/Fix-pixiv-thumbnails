@@ -3,7 +3,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20200915.1
+// @version        20200917.1
 // @updateURL      https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
@@ -138,20 +138,24 @@
 
     function findParentSize(node) {
         let e = node;
-        while (true) {
-            let size = Math.max(node.width, node.height);
+        while (e.parentElement) {
+            let size = Math.max(node.getAttribute("width"), node.getAttribute("height"));
             if (size > 0) { return size; }
 
             size = Math.max(cssPx(node.style.width, node.style.height));
             if (size > 0) { return size; }
 
-            let cstyle = window.getComputedStyle(node);
-            size = Math.max(cssPx(cstyle.width), cssPx(cstyle.height));
-            if (size > 0) { return size; }
-
-            if (!e.parentElement) { return 0; }
             e = e.parentElement;
         }
+        e = node;
+        while (e.parentElement) {
+            let cstyle = window.getComputedStyle(node);
+            let size = Math.max(cssPx(cstyle.width), cssPx(cstyle.height));
+            if (size > 0) { return size; }
+
+            e = e.parentElement;
+        }
+        return 0;
     }
 
     function handleImg(node) {
