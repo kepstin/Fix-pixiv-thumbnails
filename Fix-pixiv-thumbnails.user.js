@@ -3,7 +3,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20201007.5
+// @version        20201007.6
 // @updateURL      https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
@@ -37,6 +37,16 @@
   // Configure this by setting `kepstinDomainOverride` in LocalStorage
   let domainOverride = null
 
+  // Browser feature detection for CSS 4 image-set
+  let imageSetSupported = false
+  let imageSetPrefix = ''
+  if (CSS.supports('background-image', 'image-set(url("image1") 1x, url("image2") 2x)')) {
+    imageSetSupported = true
+  } else if (CSS.supports('background-image', '-webkit-image-set(url("image1") 1x, url("image2") 2x)')) {
+    imageSetSupported = true
+    imageSetPrefix = '-webkit-'
+  }
+
   // The src suffix for thumbnails
   const thumbSuffix = '_master1200.jpg'
 
@@ -69,10 +79,8 @@
       }
     ))
 
-    let defaultSrc = set.find((image) => image.scale >= window.devicePixelRatio).src
-    if (!defaultSrc) {
-      defaultSrc = set[set.length - 1].src
-    }
+    const defaultSrc = set.find((image) => image.scale >= window.devicePixelRatio) || set[set.length - 1]
+
     return { set, defaultSrc }
   }
 
@@ -81,7 +89,7 @@
   function imgSrcset (img, size, m) {
     const imageSet = genImageSet(size, m)
     img.srcset = imageSet.set.map((image) => `${image.src} ${image.scale}x`).join(', ')
-    img.src = imageSet.defaultSrc
+    img.src = imageSet.defaultSrc.src
     if (!img.attributes.width && !img.style.width) { img.style.width = `${size}px` }
     if (!img.attributes.height && !img.style.height) { img.style.height = `${size}px` }
   }
@@ -94,15 +102,11 @@
     node.style.backgroundSize = 'contain'
     node.style.backgroundPosition = 'center'
     node.style.backgroundRepeat = 'no-repeat'
-    // The way the style properties work, if you try to assign an unsupported value, it does not
-    // take effect, but a supported value replaces the old value. So assign in order of worst
-    // to best
-    // Fallback single image
-    node.style.backgroundImage = `url("${imageSet.defaultSrc}")`
-    // webkit/blink prefixed image-set
-    node.style.backgroundImage = `-webkit-image-set(${cssImageList})`
-    // CSS4 proposed standard image-set
-    node.style.backgroundImage = `image-set(${cssImageList})`
+    if (imageSetSupported) {
+      node.style.backgroundImage = `${imageSetPrefix}image-set(${cssImageList})`
+    } else {
+      node.style.backgroundImage = `url("${imageSet.defaultSrc.src}")`
+    }
   }
 
   // Look for a URL pattern for a thumbnail image in a string and return its properties
