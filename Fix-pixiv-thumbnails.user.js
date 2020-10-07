@@ -3,7 +3,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20201007.2
+// @version        20201007.3
 // @updateURL      https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
@@ -223,17 +223,17 @@
   }
 
   function onetimeThumbnails (parentNode) {
-    parentNode.querySelectorAll('IMG').each((node) => {
+    parentNode.querySelectorAll('IMG').forEach((node) => {
       if (node.parentElement.classList.contains('_layout-thumbnail')) {
         handleLayoutThumbnail(node)
       } else {
         handleImg(node)
       }
     })
-    parentNode.querySelectorAll('DIV[style*=background-image]').each((node) => {
+    parentNode.querySelectorAll('DIV[style*=background-image]').forEach((node) => {
       handleCSSBackground(node)
     })
-    parentNode.querySelectorAll('A[style*=background-image]').each((node) => {
+    parentNode.querySelectorAll('A[style*=background-image]').forEach((node) => {
       handleCSSBackground(node)
     })
   }
@@ -242,7 +242,7 @@
     mutationList.each((mutation) => {
       switch (mutation.type) {
         case 'childList':
-          mutation.addedNodes.each((node) => {
+          mutation.addedNodes.forEach((node) => {
             if (node.nodeName === 'IMG') {
               handleImg(node)
             } else if (
