@@ -187,11 +187,6 @@
     const { width, height } = m
     const size = Math.max(width, height)
 
-    node.width = width
-    node.height = height
-    node.style.width = `${width}px`
-    node.style.height = `${height}px`
-
     imgSrcset(node, size, m)
     node.style.objectFit = 'contain'
 
