@@ -4,7 +4,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20201009.2
+// @version        20201009.3
 // @updateURL      https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
@@ -91,6 +91,7 @@
     const imageSet = genImageSet(size, m)
     img.srcset = imageSet.set.map((image) => `${image.src} ${image.scale}x`).join(', ')
     img.src = imageSet.defaultSrc.src
+    img.style.objectFit = 'contain'
     if (!img.attributes.width && !img.style.width) { img.style.width = `${size}px` }
     if (!img.attributes.height && !img.style.height) { img.style.height = `${size}px` }
   }
@@ -174,6 +175,12 @@
     if (!m) { node.dataset.kepstinThumbnail = 'bad'; return }
     if (node.dataset.kepstinThumbnail === m.path) { return }
 
+    // Cancel image load if it's not already loaded
+    if (!node.complete) {
+      node.src = ''
+      node.srcset = ''
+    }
+
     // layout-thumbnail type don't have externally set size, but instead element size is determined
     // from image size. For other types we have to calculate size.
     let size = Math.max(m.width, m.height)
@@ -183,7 +190,6 @@
     }
 
     imgSrcset(node, size, m)
-    node.style.objectFit = 'contain'
 
     node.dataset.kepstinThumbnail = m.path
   }
@@ -202,7 +208,8 @@
     if (!m) { node.dataset.kepstinThumbnail = 'bad'; return }
     if (node.dataset.kepstinThumbnail === m.path) { return }
 
-    node.style.backgroundImage = null
+    node.style.backgroundImage = ''
+
     let size = Math.max(cssPx(node.style.width), cssPx(node.style.height))
     if (!(size > 0)) {
       const cstyle = window.getComputedStyle(node)
@@ -211,6 +218,7 @@
     if (!(size > 0)) { size = Math.max(m.width, m.height) }
 
     cssImageSet(node, size, m)
+
     node.dataset.kepstinThumbnail = m.path
   }
 
