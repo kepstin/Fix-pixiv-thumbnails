@@ -4,7 +4,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20201009.3
+// @version        20201009.4
 // @updateURL      https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
@@ -184,7 +184,10 @@
     // layout-thumbnail type don't have externally set size, but instead element size is determined
     // from image size. For other types we have to calculate size.
     let size = Math.max(m.width, m.height)
-    if (!node.parentElement.classList.contains('_layout-thumbnail')) {
+    if (node.parentElement.classList.contains('_layout-thumbnail')) {
+      node.style.width = `${m.width}px`
+      node.style.height = `${m.height}px`
+    } else {
       const newSize = findParentSize(node)
       if (newSize > 16) { size = newSize }
     }
