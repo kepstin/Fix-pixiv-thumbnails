@@ -1,9 +1,10 @@
+/* eslint-disable max-len */
 // ==UserScript==
 // @name           Improve pixiv thumbnails
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20201007.6
+// @version        20201009.1
 // @updateURL      https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
@@ -14,6 +15,7 @@
 // @exclude        https://www.pixiv.net/fanbox*
 // @grant          none
 // ==/UserScript==
+/* eslint-enable max-len */
 
 // Copyright © 2020 Calvin Walton <calvin.walton@kepstin.ca>
 //
@@ -35,9 +37,12 @@
 
   // Use an alternate domain (CDN) to load images
   // Configure this by setting `kepstinDomainOverride` in LocalStorage
+  // e.g. by typing:
+  //   window.localStorage.kepstinDomainOverride = 'i-cf.pximg.net'
+  // in the browser JS console on a pixiv page.
   let domainOverride = null
 
-  // Browser feature detection for CSS 4 image-set
+  // Browser feature detection for CSS 4 image-set()
   let imageSetSupported = false
   let imageSetPrefix = ''
   if (CSS.supports('background-image', 'image-set(url("image1") 1x, url("image2") 2x)')) {
@@ -46,9 +51,6 @@
     imageSetSupported = true
     imageSetPrefix = '-webkit-'
   }
-
-  // The src suffix for thumbnails
-  const thumbSuffix = '_master1200.jpg'
 
   // A regular expression that matches pixiv thumbnail urls
   // Has 4 captures:
@@ -69,18 +71,17 @@
     { size: 1200, path: '' }
   ]
 
+  // The src suffix for thumbnails
+  const thumbSuffix = '_master1200.jpg'
+
   // Generate a list of original thumbnail images in various sizes for an image,
   // and determine a default image based on the display size and screen resolution
   function genImageSet (size, m) {
-    const set = imageSizes.map((imageSize) => (
-      {
-        src: `https://${m.domain}${imageSize.path}/img-master/${m.path}${thumbSuffix}`,
-        scale: imageSize.size / size
-      }
-    ))
-
+    const set = imageSizes.map((imageSize) => ({
+      src: `https://${m.domain}${imageSize.path}/img-master/${m.path}${thumbSuffix}`,
+      scale: imageSize.size / size
+    }))
     const defaultSrc = set.find((image) => image.scale >= window.devicePixelRatio) || set[set.length - 1]
-
     return { set, defaultSrc }
   }
 
@@ -98,11 +99,11 @@
   // to a single image
   function cssImageSet (node, size, m) {
     const imageSet = genImageSet(size, m)
-    const cssImageList = imageSet.set.map((image) => `url("${image.src}") ${image.scale}x`).join(', ')
     node.style.backgroundSize = 'contain'
     node.style.backgroundPosition = 'center'
     node.style.backgroundRepeat = 'no-repeat'
     if (imageSetSupported) {
+      const cssImageList = imageSet.set.map((image) => `url("${image.src}") ${image.scale}x`).join(', ')
       node.style.backgroundImage = `${imageSetPrefix}image-set(${cssImageList})`
     } else {
       node.style.backgroundImage = `url("${imageSet.defaultSrc.src}")`
@@ -116,24 +117,15 @@
     if (!m) { return null }
 
     let [_, domain, width, height, path] = m
-
     // The 1200 size does not include size in the URL, so fill in the values here when missing
     width = width || 1200
     height = height || 1200
-
-    if (domainOverride) {
-      domain = domainOverride
-    }
-
-    return {
-      domain, width, height, path
-    }
+    if (domainOverride) { domain = domainOverride }
+    return { domain, width, height, path }
   }
 
   function cssPx (value) {
-    if (!value.endsWith('px')) {
-      return NaN
-    }
+    if (!value.endsWith('px')) { return NaN }
     return +value.replace(/[^\d.-]/g, '')
   }
 
@@ -161,21 +153,6 @@
 
   function handleImg (node) {
     if (node.dataset.kepstinThumbnail === 'bad') { return }
-
-    const m = matchThumbnail(node.src)
-    if (!m) { node.dataset.kepstinThumbnail = 'bad'; return }
-    if (node.dataset.kepstinThumbnail === m.path) { return }
-
-    let size = findParentSize(node)
-    if (!(size > 16)) { size = Math.max(m.width, m.height) }
-    imgSrcset(node, size, m)
-    node.style.objectFit = 'contain'
-
-    node.dataset.kepstinThumbnail = m.path
-  }
-
-  function handleLayoutThumbnail (node) {
-    if (node.dataset.kepstinThumbnail === 'bad') { return }
     // Check for lazy-loaded images, which have a temporary URL
     // They'll be updated later when the src is set
     if (node.src.startsWith('data:') || node.src.endsWith('transparent.gif')) { return }
@@ -184,8 +161,13 @@
     if (!m) { node.dataset.kepstinThumbnail = 'bad'; return }
     if (node.dataset.kepstinThumbnail === m.path) { return }
 
-    const { width, height } = m
-    const size = Math.max(width, height)
+    // layout-thumbnail type don't have externally set size, but instead element size is determined
+    // from image size. For other types we have to calculate size.
+    let size = Math.max(m.width, m.height)
+    if (!node.parentElement.classList.contains('_layout-thumbnail')) {
+      const newSize = findParentSize(node)
+      if (newSize > 16) { size = newSize }
+    }
 
     imgSrcset(node, size, m)
     node.style.objectFit = 'contain'
@@ -201,15 +183,12 @@
       node.classList.contains('js-lazyload') ||
       node.classList.contains('lazyloaded') ||
       node.classList.contains('lazyloading')
-    ) {
-      return
-    }
+    ) { return }
 
     const m = matchThumbnail(node.style.backgroundImage)
     if (!m) { node.dataset.kepstinThumbnail = 'bad'; return }
     if (node.dataset.kepstinThumbnail === m.path) { return }
 
-    node.style.backgroundImage = ''
     let size = Math.max(cssPx(node.style.width), cssPx(node.style.height))
     if (!(size > 0)) {
       const cstyle = window.getComputedStyle(node)
@@ -223,11 +202,7 @@
 
   function onetimeThumbnails (parentNode) {
     parentNode.querySelectorAll('IMG').forEach((node) => {
-      if (node.parentElement.classList.contains('_layout-thumbnail')) {
-        handleLayoutThumbnail(node)
-      } else {
-        handleImg(node)
-      }
+      handleImg(node)
     })
     parentNode.querySelectorAll('DIV[style*=background-image]').forEach((node) => {
       handleCSSBackground(node)
@@ -239,15 +214,13 @@
 
   function mutationObserverCallback (mutationList, _observer) {
     mutationList.forEach((mutation) => {
+      const target = mutation.target
       switch (mutation.type) {
         case 'childList':
           mutation.addedNodes.forEach((node) => {
             if (node.nodeName === 'IMG') {
               handleImg(node)
-            } else if (
-              (node.nodeName === 'DIV' || node.nodeName === 'A') &&
-              node.style.backgroundImage
-            ) {
+            } else if ((node.nodeName === 'DIV' || node.nodeName === 'A') && node.style.backgroundImage) {
               handleCSSBackground(node)
             } else if (
               node.nodeName === 'DIV' || node.nodeName === 'SECTION' || node.nodeName === 'LI' || node.nodeName === 'FIGURE'
@@ -257,16 +230,10 @@
           })
           break
         case 'attributes':
-          if (
-            (mutation.target.nodeName === 'DIV' || mutation.target.nodeName === 'A') &&
-            mutation.target.style.backgroundImage
-          ) {
-            handleCSSBackground(mutation.target)
-          } else if (
-            mutation.target.nodeName === 'IMG' &&
-            mutation.target.parentElement.classList.contains('_layout-thumbnail')
-          ) {
-            handleLayoutThumbnail(mutation.target)
+          if ((target.nodeName === 'DIV' || target.nodeName === 'A') && target.style.backgroundImage) {
+            handleCSSBackground(target)
+          } else if (target.nodeName === 'IMG') {
+            handleImg(target)
           }
           break
         // no default

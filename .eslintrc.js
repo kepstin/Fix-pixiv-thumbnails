@@ -7,6 +7,7 @@ module.exports = {
     'standard'
   ],
   rules: {
-    'no-unused-vars': ['error', { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }]
+    'no-unused-vars': ['error', { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }],
+    'max-len': ['error', { code: 128 }]
   }
 }
