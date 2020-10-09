@@ -4,7 +4,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20201009.1
+// @version        20201009.2
 // @updateURL      https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
@@ -157,6 +157,19 @@
     // They'll be updated later when the src is set
     if (node.src.startsWith('data:') || node.src.endsWith('transparent.gif')) { return }
 
+    // Terrible hack: the discovery page creates temporary IMG to... preload? the images, then switches
+    // to setting a background on a DIV afterwards. This would be fine, except the temporary images don't
+    // have the height/width set.
+    if (
+      +node.getAttribute('width') === 0 &&
+      +node.getAttribute('height') === 0 &&
+      window.location.pathname.indexOf('/discovery') !== -1
+    ) {
+      // So set the width/height to the expected values
+      node.width = 198
+      node.height = 198
+    }
+
     const m = matchThumbnail(node.src)
     if (!m) { node.dataset.kepstinThumbnail = 'bad'; return }
     if (node.dataset.kepstinThumbnail === m.path) { return }
@@ -189,6 +202,7 @@
     if (!m) { node.dataset.kepstinThumbnail = 'bad'; return }
     if (node.dataset.kepstinThumbnail === m.path) { return }
 
+    node.style.backgroundImage = null
     let size = Math.max(cssPx(node.style.width), cssPx(node.style.height))
     if (!(size > 0)) {
       const cstyle = window.getComputedStyle(node)
