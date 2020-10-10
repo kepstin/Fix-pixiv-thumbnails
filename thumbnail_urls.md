@@ -2,17 +2,17 @@
 
 ## Domain Names
 
-* `i.pximg.net`: Actually a wildcard, `*.pximg.net`. Servers use IP address range from IDC Frontier Inc.
-* `i-cf.pximg.net`: Cloudflare CDN services, via DNS delegation.
+* `i.pximg.net`: Actually a wildcard, `*.pximg.net`. Servers in Japan using IP address range from IDC Frontier Inc.
+* `i-cf.pximg.net`: Cloudflare global CDN services, via DNS delegation.
 * `imgaz.pixiv.net`: Backend servers? Using IP address range from IDC Frontier Inc, but different/smaller range than `i.pximg.net`.
 
 ## Illustration
 
-Original image is at `https://i.pximg.net/img-original/img/YYYY/MM/DD/HH/MM/SS/NNNNNNNN_pN.jpg`
+Original image is at `https://i.pximg.net/img-original/img/YYYY/MM/DD/HH/MM/SS/NNNNNNNN_pN.jpg` (or `.png`)
 
 ## Thumbnail
 
-**bold** is unique size for image type
+**bold** is unique size for image type. Thumbnails are always JPEG images.
 
 ### Preserve aspect ratio
 
