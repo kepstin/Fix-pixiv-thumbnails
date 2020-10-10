@@ -4,7 +4,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20201010.1
+// @version        20201010.2
 // @updateURL      https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
@@ -37,10 +37,13 @@
 
   // Use an alternate domain (CDN) to load images
   // Configure this by setting `kepstinDomainOverride` in LocalStorage
-  // e.g. by typing:
-  //   window.localStorage.kepstinDomainOverride = 'i-cf.pximg.net'
-  // in the browser JS console on a pixiv page.
   let domainOverride = null
+
+  // Use custom (uploader-provided) thumbnail crops
+  // If you enable this setting, then if the uploader has set a custom square crop on the image, it will
+  // be used. Automatically cropped images will continue to be converted to uncropped images
+  // Configure this by setting `kesptinAllowCustom` in LocalStorage
+  let allowCustom = true
 
   // Browser feature detection for CSS 4 image-set()
   let imageSetSupported = false
@@ -86,27 +89,29 @@
     { size: 1200, path: '' }
   ]
 
-  // The src suffix for thumbnails
-  const thumbSuffix = '_master1200.jpg'
-
   // Generate a list of original thumbnail images in various sizes for an image,
   // and determine a default image based on the display size and screen resolution
   function genImageSet (size, m) {
-    const set = imageSizes.map((imageSize) => ({
-      src: `https://${m.domain}${imageSize.path}/img-master/${m.path}${thumbSuffix}`,
+    if (allowCustom && m.crop === 'custom') {
+      return imageSizes.map((imageSize) => ({
+        src: `https://${m.domain}${imageSize.path}/custom-thumb/${m.path}_custom1200.jpg`,
+        scale: imageSize.size / size
+      }))
+    }
+    return imageSizes.map((imageSize) => ({
+      src: `https://${m.domain}${imageSize.path}/img-master/${m.path}_master1200.jpg`,
       scale: imageSize.size / size
     }))
-    const defaultSrc = set.find((image) => image.scale >= 1) || set[set.length - 1]
-    const optimalSrc = set.find((image) => image.scale >= window.devicePixelRatio) || set[set.length - 1]
-    return { set, defaultSrc, optimalSrc }
   }
 
   // Create a srcset= attribute on the img, with appropriate dpi scaling values
-  // Also update the src= attribute to a value appropriate for current dpi
+  // Also update the src= attribute
   function imgSrcset (img, size, m) {
     const imageSet = genImageSet(size, m)
-    img.srcset = imageSet.set.map((image) => `${image.src} ${image.scale}x`).join(', ')
-    img.src = imageSet.defaultSrc.src // IMG tag src is assume to be for 1x scale
+    img.srcset = imageSet.map((image) => `${image.src} ${image.scale}x`).join(', ')
+    // IMG tag src attribute is assumed to be 1x scale
+    const defaultSrc = imageSet.find((image) => image.scale >= 1) || imageSet[imageSet.length - 1]
+    img.src = defaultSrc.src
     img.style.objectFit = 'contain'
     if (!img.attributes.width && !img.style.width) { img.style.width = `${size}px` }
     if (!img.attributes.height && !img.style.height) { img.style.height = `${size}px` }
@@ -120,10 +125,11 @@
     node.style.backgroundPosition = 'center'
     node.style.backgroundRepeat = 'no-repeat'
     if (imageSetSupported) {
-      const cssImageList = imageSet.set.map((image) => `url("${image.src}") ${image.scale}x`).join(', ')
+      const cssImageList = imageSet.map((image) => `url("${image.src}") ${image.scale}x`).join(', ')
       node.style.backgroundImage = `${imageSetPrefix}image-set(${cssImageList})`
     } else {
-      node.style.backgroundImage = `url("${imageSet.optimalSrc.src}")`
+      const optimalSrc = imageSet.find((image) => image.scale >= window.devicePixelRatio) || imageSet[imageSet.length - 1]
+      node.style.backgroundImage = `url("${optimalSrc.src}")`
     }
   }
 
@@ -271,6 +277,7 @@
   function updateSettings () {
     try {
       domainOverride = localStorage.getItem('kepstinDomainOverride')
+      allowCustom = (localStorage.getItem('kepstinAllowCustom') === 'true')
     } catch (e) {
       console.log(`Error loading Fix-pixiv-thumbnails settings: ${e}`)
     }
