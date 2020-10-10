@@ -19,7 +19,7 @@ User preferences can be configured by setting items in the web browser's LocalSt
 
 To add a preference:
 ```js
-window.localStorage.addItem('Preference name', 'value')
+window.localStorage.setItem('Preference name', 'value')
 ```
 To remove a preference:
 ```js
