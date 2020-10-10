@@ -15,7 +15,7 @@ I understand English and simple Japanese, please help translate :)
 
 ## Preferences
 
-User preferences can be configured by setting items in the web browser's LocalStorage. To set preferences, go to `www.pixiv.net` and open the web browser's JavaScript console. Type in one of these statements:
+User preferences can be configured by setting items in the web browser's LocalStorage. To set preferences, go to `www.pixiv.net` and open the Web Inspector (usually `Ctrl-Shift-I`). Type in one of these statements in the Javascript console at the bottom:
 
 To add a preference:
 ```js
