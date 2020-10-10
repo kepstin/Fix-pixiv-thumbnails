@@ -4,7 +4,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20201010.3
+// @version        20201010.4
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
 // @author         Calvin Walton
@@ -170,7 +170,7 @@
     // to setting a background on a DIV afterwards. This would be fine, except the temporary images don't
     // have the height/width set.
     if (
-      +node.getAttribute('width') === 0 && +node.getAttribute('height') === 0 &&
+      node.getAttribute('width') === '0' && node.getAttribute('height') === '0' &&
       /^\/(?:discovery|(?:bookmark|mypixiv)_new_illust(?:_r18)?\.php)/.test(window.location.pathname)
     ) {
       // Set the width/height to the expected values
