@@ -4,7 +4,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20201009.4
+// @version        20201009.5
 // @updateURL      https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
@@ -158,15 +158,14 @@
     // They'll be updated later when the src is set
     if (node.src.startsWith('data:') || node.src.endsWith('transparent.gif')) { return }
 
-    // Terrible hack: the discovery page creates temporary IMG to... preload? the images, then switches
+    // Terrible hack: A few pages on pixiv create temporary IMG tags to... preload? the images, then switch
     // to setting a background on a DIV afterwards. This would be fine, except the temporary images don't
     // have the height/width set.
     if (
-      +node.getAttribute('width') === 0 &&
-      +node.getAttribute('height') === 0 &&
-      window.location.pathname.indexOf('/discovery') !== -1
+      +node.getAttribute('width') === 0 && +node.getAttribute('height') === 0 &&
+      /^\/(?:discovery|(?:bookmark|mypixiv)_new_illust(?:_r18)?\.php)/.test(window.location.pathname)
     ) {
-      // So set the width/height to the expected values
+      // Set the width/height to the expected values
       node.width = 198
       node.height = 198
     }
