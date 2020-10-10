@@ -19,11 +19,11 @@ User preferences can be configured by setting items in the web browser's LocalSt
 
 To add a preference:
 ```js
-window.localStorage.setItem('Preference name', 'value')
+localStorage.setItem('Preference name', 'value')
 ```
 To remove a preference:
 ```js
-window.localStorage.removeItem('Preference name')
+localStorage.removeItem('Preference name')
 ```
 
 ### Allow custom thumbnails
