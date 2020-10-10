@@ -5,7 +5,6 @@
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
 // @version        20201010.2
-// @downloadURL    https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
 // @author         Calvin Walton
