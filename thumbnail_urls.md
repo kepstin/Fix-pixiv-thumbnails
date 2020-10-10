@@ -4,7 +4,6 @@
 
 * `i.pximg.net`: Actually a wildcard, `*.pximg.net`. Servers use IP address range from IDC Frontier Inc.
 * `i-cf.pximg.net`: Cloudflare CDN services, via DNS delegation.
-* `i-f.pximg.net`: Fastly CDN services, via CNAME.
 * `imgaz.pixiv.net`: Backend servers? Using IP address range from IDC Frontier Inc, but different/smaller range than `i.pximg.net`.
 
 ## Illustration
