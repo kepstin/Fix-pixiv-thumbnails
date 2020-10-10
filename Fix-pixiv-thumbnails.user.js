@@ -4,7 +4,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20201009.5
+// @version        20201010.1
 // @updateURL      https://raw.githubusercontent.com/kepstin/Fix-pixiv-thumbnails/master/Fix-pixiv-thumbnails.user.js
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
@@ -53,13 +53,28 @@
   }
 
   // A regular expression that matches pixiv thumbnail urls
-  // Has 4 captures:
+  // Has 5 captures:
   // $1: domain name
   // $2: thumbnail width (optional)
   // $3: thumbnail height (optional)
   // $4: everything in the URL after the thumbnail size up to the image suffix
+  // $5: thumbnail crop type: square (auto crop), custom (manual crop), master (no crop)
   // eslint-disable-next-line max-len
-  const srcRegexp = /https?:\/\/(i[^.]*\.pximg\.net)(?:\/c\/(\d+)x(\d+)(?:_[^/]*)?)?\/(?:custom-thumb|img-master)\/(.*?)_(?:custom|master|square)1200.jpg/
+  const srcRegexp = /https?:\/\/(i[^.]*\.pximg\.net)(?:\/c\/(\d+)x(\d+)(?:_[^/]*)?)?\/(?:custom-thumb|img-master)\/(.*?)_(custom|master|square)1200.jpg/
+
+  // Look for a URL pattern for a thumbnail image in a string and return its properties
+  // Returns null if no image found, otherwise a structure containing the domain, width, height, path.
+  function matchThumbnail (str) {
+    const m = str.match(srcRegexp)
+    if (!m) { return null }
+
+    let [_, domain, width, height, path, crop] = m
+    // The 1200 size does not include size in the URL, so fill in the values here when missing
+    width = width || 1200
+    height = height || 1200
+    if (domainOverride) { domain = domainOverride }
+    return { domain, width, height, path, crop }
+  }
 
   // List of image sizes and paths possible for original aspect thumbnail images
   // This must be in order from small to large for the image set generation to work
@@ -81,8 +96,9 @@
       src: `https://${m.domain}${imageSize.path}/img-master/${m.path}${thumbSuffix}`,
       scale: imageSize.size / size
     }))
-    const defaultSrc = set.find((image) => image.scale >= window.devicePixelRatio) || set[set.length - 1]
-    return { set, defaultSrc }
+    const defaultSrc = set.find((image) => image.scale >= 1) || set[set.length - 1]
+    const optimalSrc = set.find((image) => image.scale >= window.devicePixelRatio) || set[set.length - 1]
+    return { set, defaultSrc, optimalSrc }
   }
 
   // Create a srcset= attribute on the img, with appropriate dpi scaling values
@@ -90,7 +106,7 @@
   function imgSrcset (img, size, m) {
     const imageSet = genImageSet(size, m)
     img.srcset = imageSet.set.map((image) => `${image.src} ${image.scale}x`).join(', ')
-    img.src = imageSet.defaultSrc.src
+    img.src = imageSet.defaultSrc.src // IMG tag src is assume to be for 1x scale
     img.style.objectFit = 'contain'
     if (!img.attributes.width && !img.style.width) { img.style.width = `${size}px` }
     if (!img.attributes.height && !img.style.height) { img.style.height = `${size}px` }
@@ -107,24 +123,11 @@
       const cssImageList = imageSet.set.map((image) => `url("${image.src}") ${image.scale}x`).join(', ')
       node.style.backgroundImage = `${imageSetPrefix}image-set(${cssImageList})`
     } else {
-      node.style.backgroundImage = `url("${imageSet.defaultSrc.src}")`
+      node.style.backgroundImage = `url("${imageSet.optimalSrc.src}")`
     }
   }
 
-  // Look for a URL pattern for a thumbnail image in a string and return its properties
-  // Returns null if no image found, otherwise a structure containing the domain, width, height, path.
-  function matchThumbnail (str) {
-    const m = str.match(srcRegexp)
-    if (!m) { return null }
-
-    let [_, domain, width, height, path] = m
-    // The 1200 size does not include size in the URL, so fill in the values here when missing
-    width = width || 1200
-    height = height || 1200
-    if (domainOverride) { domain = domainOverride }
-    return { domain, width, height, path }
-  }
-
+  // Parse a CSS length value to a number of pixels. Returns NaN for other units.
   function cssPx (value) {
     if (!value.endsWith('px')) { return NaN }
     return +value.replace(/[^\d.-]/g, '')
