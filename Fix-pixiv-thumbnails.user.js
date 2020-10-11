@@ -4,7 +4,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20201010.4
+// @version        20201011.1
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
 // @author         Calvin Walton
@@ -12,9 +12,13 @@
 // @match          https://dic.pixiv.net/*
 // @match          https://en-dic.pixiv.net/*
 // @exclude        https://www.pixiv.net/fanbox*
-// @grant          none
+// @noframes
+// @grant GM_setValue
+// @grant GM_getValue
+// @grant GM_addValueChangeListener
 // ==/UserScript==
 /* eslint-enable max-len */
+/* global GM_addValueChangeListener */
 
 // Copyright © 2020 Calvin Walton <calvin.walton@kepstin.ca>
 //
@@ -35,14 +39,14 @@
   'use strict'
 
   // Use an alternate domain (CDN) to load images
-  // Configure this by setting `kepstinDomainOverride` in LocalStorage
-  let domainOverride = null
+  // Configure this by setting `domainOverride` in userscript values
+  let domainOverride = ''
 
   // Use custom (uploader-provided) thumbnail crops
   // If you enable this setting, then if the uploader has set a custom square crop on the image, it will
   // be used. Automatically cropped images will continue to be converted to uncropped images
-  // Configure this by setting `kesptinAllowCustom` in LocalStorage
-  let allowCustom = true
+  // Configure this by setting `allowCustom` in userscript values
+  let allowCustom = false
 
   // Browser feature detection for CSS 4 image-set()
   let imageSetSupported = false
@@ -170,7 +174,7 @@
     // to setting a background on a DIV afterwards. This would be fine, except the temporary images don't
     // have the height/width set.
     if (
-      node.getAttribute('width') === '0' && node.getAttribute('height') === '0' &&
+      +node.getAttribute('width') === 0 && +node.getAttribute('height') === 0 &&
       /^\/(?:discovery|(?:bookmark|mypixiv)_new_illust(?:_r18)?\.php)/.test(window.location.pathname)
     ) {
       // Set the width/height to the expected values
@@ -273,27 +277,58 @@
     })
   }
 
-  function updateSettings () {
-    try {
-      domainOverride = localStorage.getItem('kepstinDomainOverride')
-      allowCustom = (localStorage.getItem('kepstinAllowCustom') === 'true')
-    } catch (e) {
-      console.log(`Error loading Fix-pixiv-thumbnails settings: ${e}`)
+  function loadSettings () {
+    const gmDomainOverride = GM_getValue('domainOverride')
+    if (typeof gmDomainOverride === 'undefined') {
+      // migrate settings
+      domainOverride = localStorage.getItem('kepstinDomainOverride') || ''
+      localStorage.removeItem('kepstinDomainOverride')
+    } else {
+      domainOverride = gmDomainOverride || ''
+    }
+    if (domainOverride !== gmDomainOverride) {
+      GM_setValue('domainOverride', domainOverride)
+    }
+
+    const gmAllowCustom = GM_getValue('allowCustom')
+    if (typeof gmAllowCustom === 'undefined') {
+      // migrate settings
+      allowCustom = !!localStorage.getItem('kepstinAllowCustom')
+      localStorage.removeItem('kepstinAllowCustom')
+    } else {
+      allowCustom = !!gmAllowCustom
+    }
+    if (allowCustom !== gmAllowCustom) {
+      GM_setValue('allowCustom', allowCustom)
     }
   }
 
-  if (!window.kepstinThumbnailObserver) {
-    updateSettings()
-    // Disabled temporarily? It's inconsistant and there's no UI yet.
-    // window.addEventListener('storage', updateSettings);
-
-    onetimeThumbnails(document.firstElementChild)
-    window.kepstinThumbnailObserver = new MutationObserver(mutationObserverCallback)
-    window.kepstinThumbnailObserver.observe(document.firstElementChild, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['class', 'src', 'style']
+  if (typeof GM_getValue !== 'undefined' && typeof GM_setValue !== 'undefined') {
+    loadSettings()
+  }
+  if (typeof GM_addValueChangeListener !== 'undefined') {
+    GM_addValueChangeListener('domainOverride', (_name, _oldValue, newValue, remote) => {
+      if (!remote) { return }
+      domainOverride = newValue || ''
+      if (domainOverride !== newValue) {
+        GM_setValue('domainOverride', domainOverride)
+      }
+    })
+    GM_addValueChangeListener('allowCustom', (_name, _oldValue, newValue, remote) => {
+      if (!remote) { return }
+      allowCustom = !!newValue
+      if (allowCustom !== newValue) {
+        GM_setValue('allowCustom', allowCustom)
+      }
     })
   }
+
+  onetimeThumbnails(document.firstElementChild)
+  const thumbnailObserver = new MutationObserver(mutationObserverCallback)
+  thumbnailObserver.observe(document.firstElementChild, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class', 'src', 'style']
+  })
 }())

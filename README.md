@@ -15,25 +15,24 @@ I understand English and simple Japanese, please help translate :)
 
 ## Preferences
 
-User preferences can be configured by setting items in the web browser's LocalStorage. To set preferences, go to `www.pixiv.net` and open the Web Inspector (usually `Ctrl-Shift-I`). Type in one of these statements in the Javascript console at the bottom:
+User preferences can be configured by setting items in your userscript manager's value storage. (Preivously these settings were configured in LocalStorage - they will automatically be migrated).
 
-To add a preference:
-```js
-localStorage.setItem('Preference name', 'value')
-```
-To remove a preference:
-```js
-localStorage.removeItem('Preference name')
-```
+Before you can edit the settings, you should open `www.pixiv.net` at least once with this script active to initialize the defaults.
+
+The method for editing the settings varies depending on which userscript manager you are using.
+
+* **TamperMonkey**: Open the extension Dashboard, and click the "Settings" tab. Ensure that "Config mode" is set to "Advanced". Then go to the "Installed userscripts" tab and click on the script name. Select the "Storage" tab.
+* **ViolentMonkey**: Open the extension Dashboard, and click the Edit button (`</>`) under the script name. Select the "Values" tab at the top of the screen.
+* **GreaseMonkey 4**: User preferences are not supported.
 
 ### Allow custom thumbnails
 
-Preference name: `kepstinAllowCustom`
+Preference name: `allowCustom`
 
 Pixiv allows artists to set custom square crops for thumbnails when they upload the image. If you would like to use custom cropped thumbnails, set the value to `true`
 
 ### Override image CDN domain
 
-Preference name: `kepstinOverrideDomain`
+Preference name: `overrideDomain`
 
 By default, images will be loaded from the domain name provided by pixiv. However, you can choose a different CDN to use by setting the value of this preference to a different domain name. This may improve image load speeds overseas. See the [list of domain names](https://github.com/kepstin/Fix-pixiv-thumbnails/blob/master/thumbnail_urls.md#domain-names) for more information.
