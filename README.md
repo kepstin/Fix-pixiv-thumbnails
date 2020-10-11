@@ -21,9 +21,9 @@ Before you can edit the settings, you should open `www.pixiv.net` at least once 
 
 The method for editing the settings varies depending on which userscript manager you are using.
 
-* **TamperMonkey**: Open the extension Dashboard, and click the "Settings" tab. Ensure that "Config mode" is set to "Advanced". Then go to the "Installed userscripts" tab and click on the script name. Select the "Storage" tab.
+* **TamperMonkey**: Open the extension Dashboard then go to the "Installed userscripts" tab and click on the script name. Select the "Storage" tab. If the storage tab doesn't show up, you might need to click the top "Settings" tab and set "Config mode" to "Advanced".
 * **ViolentMonkey**: Open the extension Dashboard, and click the Edit button (`</>`) under the script name. Select the "Values" tab at the top of the screen.
-* **GreaseMonkey 4**: User preferences are not supported.
+* **GreaseMonkey 4**: User preferences are not currently supported.
 
 ### Allow custom thumbnails
 
