@@ -4,7 +4,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20201011.1
+// @version        20201029.1
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
 // @author         Calvin Walton
@@ -13,6 +13,7 @@
 // @match          https://en-dic.pixiv.net/*
 // @exclude        https://www.pixiv.net/fanbox*
 // @noframes
+// @run-at document-start
 // @grant GM_setValue
 // @grant GM_getValue
 // @grant GM_addValueChangeListener
@@ -182,7 +183,7 @@
       node.height = 198
     }
 
-    const m = matchThumbnail(node.src)
+    const m = matchThumbnail(node.src || node.srcset)
     if (!m) { node.dataset.kepstinThumbnail = 'bad'; return }
     if (node.dataset.kepstinThumbnail === m.path) { return }
 
@@ -254,18 +255,20 @@
       switch (mutation.type) {
         case 'childList':
           mutation.addedNodes.forEach((node) => {
+            if (node.nodeType !== Node.ELEMENT_NODE) return
+
             if (node.nodeName === 'IMG') {
               handleImg(node)
             } else if ((node.nodeName === 'DIV' || node.nodeName === 'A') && node.style.backgroundImage) {
               handleCSSBackground(node)
-            } else if (
-              node.nodeName === 'DIV' || node.nodeName === 'SECTION' || node.nodeName === 'LI' || node.nodeName === 'FIGURE'
-            ) {
+            } else {
               onetimeThumbnails(node)
             }
           })
           break
         case 'attributes':
+          if (target.nodeType !== Node.ELEMENT_NODE) break
+
           if ((target.nodeName === 'DIV' || target.nodeName === 'A') && target.style.backgroundImage) {
             handleCSSBackground(target)
           } else if (target.nodeName === 'IMG') {
