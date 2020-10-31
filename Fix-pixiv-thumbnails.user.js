@@ -4,7 +4,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20201011.1
+// @version        20201031.1
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
 // @author         Calvin Walton
@@ -116,8 +116,8 @@
     const defaultSrc = imageSet.find((image) => image.scale >= 1) || imageSet[imageSet.length - 1]
     img.src = defaultSrc.src
     img.style.objectFit = 'contain'
-    if (!img.attributes.width && !img.style.width) { img.style.width = `${size}px` }
-    if (!img.attributes.height && !img.style.height) { img.style.height = `${size}px` }
+    if (!img.attributes.width && !img.style.width) { img.setAttribute('width', size) }
+    if (!img.attributes.height && !img.style.height) { img.setAttribute('height', size) }
   }
 
   // Set up a css background-image with image-set() where supported, falling back
@@ -168,7 +168,7 @@
     if (node.dataset.kepstinThumbnail === 'bad') { return }
     // Check for lazy-loaded images, which have a temporary URL
     // They'll be updated later when the src is set
-    if (node.src.startsWith('data:') || node.src.endsWith('transparent.gif')) { return }
+    if (node.src === '' || node.src.startsWith('data:') || node.src.endsWith('transparent.gif')) { return }
 
     // Terrible hack: A few pages on pixiv create temporary IMG tags to... preload? the images, then switch
     // to setting a background on a DIV afterwards. This would be fine, except the temporary images don't
