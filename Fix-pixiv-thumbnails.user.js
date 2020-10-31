@@ -172,8 +172,8 @@
     if (node.src === '' || node.src.startsWith('data:') || node.src.endsWith('transparent.gif')) { return }
 
     // Terrible hack: A few pages on pixiv create temporary IMG tags to... preload? the images, then switch
-    // to setting a background on a DIV afterwards. This would be fine, except the temporary images don't
-    // have the height/width set.
+    // to setting a background on a DIV afterwards. This would be fine, except the temporary images have
+    // the height/width set to 0, breaking the hidpi image selection
     if (
       node.getAttribute('width') === '0' && node.getAttribute('height') === '0' &&
       /^\/(?:discovery|(?:bookmark|mypixiv)_new_illust(?:_r18)?\.php)/.test(window.location.pathname)
