@@ -53,6 +53,14 @@ Or uploader-set crop: `…/custom-thumb/img/YYYY/MM/DD/HH/MM/SS/NNNNNNNN_pN_cust
 * 600x600: `https://i.pximg.net/c/600x600`
 * 1200x1200: `https://i.pximg.net` (no `/c/` path specified, default size?)
 
+### WEBP
+
+These endpoints use the same url pattern as the jpg ones (including the jpg extension) but actually serve WEBP images. Unless otherwise stated, all endpoint support both preserve aspect ratio and square crop.
+
+* 360x360: `https://i.pximg.net/c/360x360_10_webp`
+* 540x540: `https://i.pximg.net/c/540x540_10_webp`
+* 600x1200: `https://i.pximg.net/c/600x1200_90_webp` (square crop gives 600x600)
+
 ### Other shapes
 
 * **1200x???** crop (used on banners): `https://i.pximg.net/c/w1200_q80_a2_g1_u1_cr0:N.NNN:N:N.NNN/img-master/img/YYYY/MM/DD/HH/MM/SS/NNNNNNNN_pN_master1200.jpg`
