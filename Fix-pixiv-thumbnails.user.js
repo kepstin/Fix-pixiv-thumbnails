@@ -4,7 +4,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20201031.2
+// @version        20201031.3
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
 // @author         Calvin Walton
@@ -146,17 +146,17 @@
   function findParentSize (node) {
     let e = node
     while (e.parentElement) {
-      let size = Math.max(node.getAttribute('width'), node.getAttribute('height'))
+      let size = Math.max(e.getAttribute('width'), e.getAttribute('height'))
       if (size > 0) { return size }
 
-      size = Math.max(cssPx(node.style.width), cssPx(node.style.height))
+      size = Math.max(cssPx(e.style.width), cssPx(e.style.height))
       if (size > 0) { return size }
 
       e = e.parentElement
     }
     e = node
     while (e.parentElement) {
-      const cstyle = window.getComputedStyle(node)
+      const cstyle = window.getComputedStyle(e)
       const size = Math.max(cssPx(cstyle.width), cssPx(cstyle.height))
       if (size > 0) { return size }
 
