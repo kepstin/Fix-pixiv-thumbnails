@@ -179,8 +179,8 @@
       /^\/(?:discovery|(?:bookmark|mypixiv)_new_illust(?:_r18)?\.php)/.test(window.location.pathname)
     ) {
       // Set the width/height to the expected values
-      node.width = 198
-      node.height = 198
+      node.setAttribute('width', 198)
+      node.setAttribute('height', 198)
     }
 
     const m = matchThumbnail(node.src || node.srcset)
@@ -197,8 +197,8 @@
     // from image size. For other types we have to calculate size.
     let size = Math.max(m.width, m.height)
     if (node.parentElement.classList.contains('_layout-thumbnail')) {
-      node.style.width = `${m.width}px`
-      node.style.height = `${m.height}px`
+      node.setAttribute('width', m.width)
+      node.setAttribute('height', m.height)
     } else {
       const newSize = findParentSize(node)
       if (newSize > 16) { size = newSize }
