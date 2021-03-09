@@ -4,7 +4,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20201029.1
+// @version        20201031.3
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
 // @author         Calvin Walton
@@ -117,8 +117,8 @@
     const defaultSrc = imageSet.find((image) => image.scale >= 1) || imageSet[imageSet.length - 1]
     img.src = defaultSrc.src
     img.style.objectFit = 'contain'
-    if (!img.attributes.width && !img.style.width) { img.style.width = `${size}px` }
-    if (!img.attributes.height && !img.style.height) { img.style.height = `${size}px` }
+    if (!img.attributes.width && !img.style.width) { img.setAttribute('width', size) }
+    if (!img.attributes.height && !img.style.height) { img.setAttribute('height', size) }
   }
 
   // Set up a css background-image with image-set() where supported, falling back
@@ -146,17 +146,17 @@
   function findParentSize (node) {
     let e = node
     while (e.parentElement) {
-      let size = Math.max(node.getAttribute('width'), node.getAttribute('height'))
+      let size = Math.max(e.getAttribute('width'), e.getAttribute('height'))
       if (size > 0) { return size }
 
-      size = Math.max(cssPx(node.style.width), cssPx(node.style.height))
+      size = Math.max(cssPx(e.style.width), cssPx(e.style.height))
       if (size > 0) { return size }
 
       e = e.parentElement
     }
     e = node
     while (e.parentElement) {
-      const cstyle = window.getComputedStyle(node)
+      const cstyle = window.getComputedStyle(e)
       const size = Math.max(cssPx(cstyle.width), cssPx(cstyle.height))
       if (size > 0) { return size }
 
@@ -169,18 +169,18 @@
     if (node.dataset.kepstinThumbnail === 'bad') { return }
     // Check for lazy-loaded images, which have a temporary URL
     // They'll be updated later when the src is set
-    if (node.src.startsWith('data:') || node.src.endsWith('transparent.gif')) { return }
+    if (node.src === '' || node.src.startsWith('data:') || node.src.endsWith('transparent.gif')) { return }
 
     // Terrible hack: A few pages on pixiv create temporary IMG tags to... preload? the images, then switch
-    // to setting a background on a DIV afterwards. This would be fine, except the temporary images don't
-    // have the height/width set.
+    // to setting a background on a DIV afterwards. This would be fine, except the temporary images have
+    // the height/width set to 0, breaking the hidpi image selection
     if (
-      +node.getAttribute('width') === 0 && +node.getAttribute('height') === 0 &&
+      node.getAttribute('width') === '0' && node.getAttribute('height') === '0' &&
       /^\/(?:discovery|(?:bookmark|mypixiv)_new_illust(?:_r18)?\.php)/.test(window.location.pathname)
     ) {
       // Set the width/height to the expected values
-      node.width = 198
-      node.height = 198
+      node.setAttribute('width', 198)
+      node.setAttribute('height', 198)
     }
 
     const m = matchThumbnail(node.src || node.srcset)
@@ -197,8 +197,8 @@
     // from image size. For other types we have to calculate size.
     let size = Math.max(m.width, m.height)
     if (node.parentElement.classList.contains('_layout-thumbnail')) {
-      node.style.width = `${m.width}px`
-      node.style.height = `${m.height}px`
+      node.setAttribute('width', m.width)
+      node.setAttribute('height', m.height)
     } else {
       const newSize = findParentSize(node)
       if (newSize > 16) { size = newSize }
