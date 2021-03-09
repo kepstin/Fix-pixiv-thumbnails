@@ -2,7 +2,7 @@
 
 Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 
-Please note that if you use this script on a mobile device, it will increase the data usage.
+Please note: this script will increase data usage on mobile devices.
 
 I understand English and simple Japanese, please help translate :)
 
