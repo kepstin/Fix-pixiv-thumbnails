@@ -15,7 +15,7 @@ I understand English and simple Japanese, please help translate :)
 
 ## Preferences
 
-User preferences can be configured by setting items in your userscript manager's value storage. (Preivously these settings were configured in LocalStorage - they will automatically be migrated).
+User preferences can be configured by setting items in your userscript manager's value storage. (Previously these settings were configured in LocalStorage - they will automatically be migrated).
 
 Before you can edit the settings, you should open `www.pixiv.net` at least once with this script active to initialize the defaults.
 
@@ -23,7 +23,7 @@ The method for editing the settings varies depending on which userscript manager
 
 * **TamperMonkey**: Open the extension Dashboard then go to the "Installed userscripts" tab and click on the script name. Select the "Storage" tab. If the storage tab doesn't show up, you might need to click the top "Settings" tab and set "Config mode" to "Advanced".
 * **ViolentMonkey**: Open the extension Dashboard, and click the Edit button (`</>`) under the script name. Select the "Values" tab at the top of the screen.
-* **GreaseMonkey 4**: User preferences are not currently supported.
+* **GreaseMonkey 4**: User preferences are not currently supported. You can edit the script to set the configuration variables.
 
 ### Allow custom thumbnails
 
