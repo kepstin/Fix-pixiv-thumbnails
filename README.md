@@ -2,6 +2,8 @@
 
 Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 
+Supports the new bookmarks page! No script update needed!
+
 Please note: this script will increase data usage on mobile devices.
 
 I understand English and simple Japanese, please help translate :)
