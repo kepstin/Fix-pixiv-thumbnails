@@ -288,9 +288,14 @@
     }
     let s = document.createElement("style");
     s.textContent = `
-      div[type="illust"] { border-radius: 0; }
-      div[type="illust"] div[radius] img { border-radius: 0; background: var(--charcoal-background1); }
-      div[type="illust"] div[radius]::before {
+      div[type="illust"] {
+        border-radius: 0;
+      }
+      div[type="illust"] img {
+        border-radius: 0;
+        background: var(--charcoal-background1);
+      }
+      div[type="illust"] a > div::before {
         border-radius: 0;
         background: transparent;
         box-shadow: inset 0 0 0 1px var(--charcoal-border);
