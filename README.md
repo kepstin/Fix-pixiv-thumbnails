@@ -2,8 +2,6 @@
 
 Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 
-***2021-10-27** The [updated Discovery page](https://www.pixiv.net/info.php?id=7477) is already supported. No userscript update is required.*
-
 Please note: this script will increase data usage on mobile devices.
 
 I understand English and simple Japanese, please help translate :)
