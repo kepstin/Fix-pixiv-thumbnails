@@ -280,6 +280,25 @@
     })
   }
 
+  function addStylesheet() {
+    if (!(window.location.host == "www.pixiv.net")) { return; }
+    if (document.head === null) {
+      document.addEventListener("DOMContentLoaded", addStylesheet, { once: true });
+      return;
+    }
+    let s = document.createElement("style");
+    s.textContent = `
+      div[type="illust"] { border-radius: 0; }
+      div[type="illust"] div[radius] img { border-radius: 0; background: var(--charcoal-background1); }
+      div[type="illust"] div[radius]::before {
+        border-radius: 0;
+        background: transparent;
+        box-shadow: inset 0 0 0 1px var(--charcoal-border);
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
   function loadSettings () {
     const gmDomainOverride = GM_getValue('domainOverride')
     if (typeof gmDomainOverride === 'undefined') {
@@ -326,6 +345,7 @@
     })
   }
 
+  addStylesheet()
   onetimeThumbnails(document.firstElementChild)
   const thumbnailObserver = new MutationObserver(mutationObserverCallback)
   thumbnailObserver.observe(document.firstElementChild, {
