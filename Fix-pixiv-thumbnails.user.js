@@ -4,7 +4,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20201031.3
+// @version        20230328.1
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
 // @author         Calvin Walton
@@ -280,6 +280,30 @@
     })
   }
 
+  function addStylesheet() {
+    if (!(window.location.host == "www.pixiv.net")) { return; }
+    if (document.head === null) {
+      document.addEventListener("DOMContentLoaded", addStylesheet, { once: true });
+      return;
+    }
+    let s = document.createElement("style");
+    s.textContent = `
+      div[type="illust"] {
+        border-radius: 0;
+      }
+      div[type="illust"] img {
+        border-radius: 0;
+        background: var(--charcoal-background1);
+      }
+      div[type="illust"] a > div::before {
+        border-radius: 0;
+        background: transparent;
+        box-shadow: inset 0 0 0 1px var(--charcoal-border);
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
   function loadSettings () {
     const gmDomainOverride = GM_getValue('domainOverride')
     if (typeof gmDomainOverride === 'undefined') {
@@ -326,6 +350,7 @@
     })
   }
 
+  addStylesheet()
   onetimeThumbnails(document.firstElementChild)
   const thumbnailObserver = new MutationObserver(mutationObserverCallback)
   thumbnailObserver.observe(document.firstElementChild, {
