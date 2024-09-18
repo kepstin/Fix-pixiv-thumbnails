@@ -4,7 +4,7 @@
 // @name:ja        pixivサムネイルを改善する
 // @namespace      https://www.kepstin.ca/userscript/
 // @license        MIT; https://spdx.org/licenses/MIT.html
-// @version        20230328.1
+// @version        20240918.0
 // @description    Stop pixiv from cropping thumbnails to a square. Use higher resolution thumbnails on Retina displays.
 // @description:ja 正方形にトリミングされて表示されるのを防止します。Retinaディスプレイで高解像度のサムネイルを使用します。
 // @author         Calvin Walton
@@ -288,14 +288,19 @@
     }
     let s = document.createElement("style");
     s.textContent = `
-      div[type="illust"] {
+      div:has(>div[width][height]), div[type="illust"] {
         border-radius: 0;
       }
-      div[type="illust"] img {
-        border-radius: 0;
-        background: var(--charcoal-background1);
+      div[width][height]:hover img[data-kepstin-thumbnail], div[type="illust"] a:hover img {
+        opacity: 1 !important;
+        background-color: var(--charcoal-background1-hover);
       }
-      div[type="illust"] a > div::before {
+      div[radius] img[data-kepstin-thumbnail], div[type="illust"] img {
+        border-radius: 0;
+        background-color: var(--charcoal-background1);
+        transition: background-color 0.2s;
+      }
+      div[radius]::before, div[type="illust"] a > div::before {
         border-radius: 0;
         background: transparent;
         box-shadow: inset 0 0 0 1px var(--charcoal-border);
